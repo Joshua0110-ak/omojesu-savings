@@ -1,13 +1,15 @@
+import os
+import dj_database_url
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ── SECURITY (Simplified for testing) ────────────────────────────────────────
-SECRET_KEY = 'django-insecure-p=en3un+%=7o4cyi_4*yhp%brip1c#vvy=1g16s%t!k7!+reb2'
-DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '::1']
+# Security
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dev-key')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
-# ── APPS ──────────────────────────────────────────────────────────────────────
+# Installed apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -18,9 +20,9 @@ INSTALLED_APPS = [
     'core',
 ]
 
-# ── MIDDLEWARE ────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ← ADD THIS!
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -31,7 +33,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
-# ── TEMPLATES ─────────────────────────────────────────────────────────────────
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -49,15 +50,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# ── DATABASE ──────────────────────────────────────────────────────────────────
+# Database - Render PostgreSQL
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3',
+        conn_max_age=600
+    )
 }
 
-# ── PASSWORD VALIDATION ──────────────────────────────────────────────────────
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -65,24 +66,34 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# ── LANGUAGE & TIME ──────────────────────────────────────────────────────────
+# Language & Time
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Lagos'
 USE_I18N = True
 USE_TZ = True
 
-# ── STATIC & MEDIA FILES ─────────────────────────────────────────────────────
+# Static files - Render
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ── OTHER SETTINGS ───────────────────────────────────────────────────────────
+# Default field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/'
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
-# ── PAYSTACK (TEST MODE) ─────────────────────────────────────────────────────
-PAYSTACK_PUBLIC_KEY = 'pk_test_e0c99a0d8ccd963ca4308e3dc2f1b222ef39edc2'
-PAYSTACK_SECRET_KEY = 'sk_test_0edce4fde153aaaf8d6b4cd9b3ddb2a366df8b64'
+# Paystack
+PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', '')
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', '')
+
+# Security for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True

@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: omojesu-savings
+    env: python
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py migrate
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn config.wsgi:application
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "omojesu-savings.onrender.com,www.yourdomain.com"
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: omojesu-db
+          property: connectionString
+
+databases:
+  - name: omojesu-db
+    databaseName: omojesu
+    user: omojesu
+    plan: free

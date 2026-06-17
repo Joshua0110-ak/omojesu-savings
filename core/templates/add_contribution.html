@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Contribution – OmoJesu Savings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #C9A84C; --gold-lt: #E8C97A; --green: #1A6B4A; --green-lt: #22885E;
+            --dark: #0A0E0C; --card: #111812; --border: rgba(201,168,76,0.18);
+            --border2: rgba(255,255,255,0.07); --text: #F0EDE6; --muted: #8A9490;
+        }
+        body {
+            min-height: 100vh; background-color: var(--dark);
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26,107,74,0.35) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(201,168,76,0.12) 0%, transparent 60%);
+            display: flex; align-items: center; justify-content: center;
+            padding: 2rem 1rem; font-family: 'DM Sans', sans-serif; color: var(--text);
+        }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .wrapper { width: 100%; max-width: 480px; animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+        .card { background: var(--card); border: 1px solid var(--border2); border-radius: 24px; padding: 2rem; box-shadow: 0 32px 80px rgba(0,0,0,0.4); }
+        .card-header { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.75rem; }
+        .card-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+        .card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 700; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; color: var(--muted); text-decoration: none; margin-bottom: 1.25rem; transition: color 0.2s; }
+        .back-link:hover { color: var(--gold-lt); }
+        .form-group { margin-bottom: 1.1rem; }
+        .form-label { display: block; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+        select, input[type="number"] {
+            width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 14px; padding: 0.85rem 1rem;
+            font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s; appearance: none;
+        }
+        select:focus, input[type="number"]:focus { border-color: rgba(201,168,76,0.45); box-shadow: 0 0 0 3px rgba(201,168,76,0.08); }
+        select option { background: #111812; color: #F0EDE6; }
+        .error-msg { background: rgba(220,60,60,0.1); border: 1px solid rgba(220,60,60,0.25); border-radius: 10px; padding: 0.65rem 0.9rem; margin-bottom: 1rem; font-size: 0.82rem; color: #F4A0A0; }
+        .btn { width: 100%; margin-top: 0.4rem; background: linear-gradient(135deg, var(--green-lt), var(--green)); border: none; border-radius: 14px; padding: 0.95rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; color: #fff; cursor: pointer; transition: filter 0.2s, transform 0.15s; box-shadow: 0 4px 24px rgba(26,107,74,0.4); }
+        .btn:hover { filter: brightness(1.1); }
+        .btn:active { transform: scale(0.985); }
+    </style>
+</head>
+<body>
+    {% if messages %}
+
+<div class="space-y-3 mb-6">
+
+    {% for message in messages %}
+
+        <div class="
+            p-4 rounded-2xl border text-sm font-medium
+
+            {% if message.tags == 'success' %}
+                bg-green-500/20
+                border-green-500/30
+                text-green-200
+
+            {% elif message.tags == 'error' %}
+                bg-red-500/20
+                border-red-500/30
+                text-red-200
+
+            {% elif message.tags == 'warning' %}
+                bg-yellow-500/20
+                border-yellow-500/30
+                text-yellow-100
+
+            {% else %}
+                bg-blue-500/20
+                border-blue-500/30
+                text-blue-100
+            {% endif %}
+        ">
+
+            {{ message }}
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endif %}
+<div class="wrapper">
+    <a href="{% url 'member_search' %}" class="back-link">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Members
+    </a>
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon">↑</div>
+            <h1 class="card-title">Add Contribution</h1>
+        </div>
+
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="error-msg">{{ msg }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Member</label>
+                {{ form.member }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Amount (₦)</label>
+                {{ form.amount }}
+            </div>
+            {% if form.errors %}
+            <div class="error-msg">{{ form.errors }}</div>
+            {% endif %}
+            <button type="submit" class="btn">Save Contribution ✓</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

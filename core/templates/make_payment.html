@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make Payment – OmoJesu Savings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #C9A84C; --gold-lt: #E8C97A; --green: #1A6B4A; --green-lt: #22885E;
+            --dark: #0A0E0C; --card: #111812; --border: rgba(201,168,76,0.18);
+            --border2: rgba(255,255,255,0.07); --text: #F0EDE6; --muted: #8A9490;
+        }
+        body {
+            min-height: 100vh; background-color: var(--dark);
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26,107,74,0.35) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(201,168,76,0.12) 0%, transparent 60%);
+            display: flex; align-items: center; justify-content: center;
+            padding: 2rem 1rem; font-family: 'DM Sans', sans-serif; color: var(--text);
+        }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .wrapper { width: 100%; max-width: 480px; animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+        .card { background: var(--card); border: 1px solid var(--border2); border-radius: 24px; padding: 2rem; box-shadow: 0 32px 80px rgba(0,0,0,0.4); }
+        .card-header { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.75rem; }
+        .card-icon { width: 42px; height: 42px; border-radius: 12px; background: rgba(0,102,204,0.15); border: 1px solid rgba(0,102,204,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; color: #93c5fd; }
+        .card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 700; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; color: var(--muted); text-decoration: none; margin-bottom: 1.25rem; transition: color 0.2s; }
+        .back-link:hover { color: var(--gold-lt); }
+        .form-group { margin-bottom: 1.1rem; }
+        .form-label { display: block; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+        .form-input {
+            width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 14px; padding: 0.85rem 1rem;
+            font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus { border-color: rgba(0,102,204,0.45); box-shadow: 0 0 0 3px rgba(0,102,204,0.08); }
+        .btn { width: 100%; margin-top: 0.4rem; background: linear-gradient(135deg, #0066CC, #0044AA); border: none; border-radius: 14px; padding: 0.95rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; color: #fff; cursor: pointer; transition: filter 0.2s, transform 0.15s; box-shadow: 0 4px 24px rgba(0,102,204,0.35); }
+        .btn:hover { filter: brightness(1.1); }
+        .btn:active { transform: scale(0.985); }
+        .info-box { background: rgba(0,102,204,0.07); border: 1px solid rgba(0,102,204,0.18); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: 0.78rem; color: #93c5fd; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <a href="{% url 'member_detail' member.id %}" class="back-link">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to Dashboard
+        </a>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">💳</div>
+                <h1 class="card-title">Pay with Paystack</h1>
+            </div>
+            
+            <div class="info-box">
+                💡 Enter the amount you want to contribute. You'll be redirected to Paystack's secure payment page.
+            </div>
+
+            {% if messages %}
+            {% for msg in messages %}
+            <div style="background:rgba(220,60,60,0.1);border:1px solid rgba(220,60,60,0.25);border-radius:10px;padding:0.65rem 0.9rem;margin-bottom:1rem;font-size:0.82rem;color:#F4A0A0;">{{ msg }}</div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Amount (₦)</label>
+                    <input type="number" name="amount" class="form-input" 
+                           placeholder="Enter amount" min="100" step="0.01" required>
+                    <p style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem;">Minimum payment: ₦100</p>
+                </div>
+                
+                <button type="submit" class="btn">
+                    💳 Proceed to Paystack
+                </button>
+                
+                <p style="font-size:0.7rem;color:var(--muted);text-align:center;margin-top:0.75rem;">
+                    🔒 Secured by Paystack. Your payment is safe and encrypted.
+                </p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

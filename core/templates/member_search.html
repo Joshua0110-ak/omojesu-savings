@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Members – OmoJesu Savings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold:    #C9A84C;
+            --gold-lt: #E8C97A;
+            --green:   #1A6B4A;
+            --green-lt:#22885E;
+            --dark:    #0A0E0C;
+            --card:    #111812;
+            --card2:   #161E18;
+            --border:  rgba(201,168,76,0.18);
+            --border2: rgba(255,255,255,0.07);
+            --text:    #F0EDE6;
+            --muted:   #8A9490;
+        }
+        body {
+            min-height: 100vh;
+            background-color: var(--dark);
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26,107,74,0.35) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(201,168,76,0.12) 0%, transparent 60%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A84C' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        nav {
+            background: rgba(10,14,12,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border2);
+            padding: 0.85rem 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 1rem; flex-wrap: wrap; position: sticky; top: 0; z-index: 50;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+        .nav-logo {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--green) 0%, #0D4A32 100%);
+            border-radius: 10px; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; box-shadow: 0 0 16px rgba(26,107,74,0.4);
+        }
+        .nav-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: var(--text); }
+        .nav-title span { color: var(--gold); }
+        .nav-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+        .btn {
+            font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
+            padding: 0.5rem 1rem; border-radius: 10px; border: 1px solid var(--border2);
+            background: rgba(255,255,255,0.05); color: var(--text); text-decoration: none;
+            cursor: pointer; transition: background 0.2s, border-color 0.2s; white-space: nowrap;
+        }
+        .btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.15); }
+        .btn-green { background: linear-gradient(135deg, var(--green-lt), var(--green)); border-color: transparent; color: #fff; box-shadow: 0 2px 12px rgba(26,107,74,0.4); }
+        .btn-green:hover { filter: brightness(1.1); }
+        .btn-purple { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.3); color: #c4b5fd; }
+        .btn-purple:hover { background: rgba(139,92,246,0.25); }
+        .logout-form { display: inline; }
+        main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+        .page-title { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 700; color: var(--text); line-height: 1.1; }
+        .page-subtitle { font-size: 0.82rem; color: var(--muted); margin-top: 0.3rem; letter-spacing: 0.04em; }
+        .search-wrap { position: relative; margin: 1.75rem 0 2rem; }
+        .search-icon { position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: 0.35; color: var(--text); pointer-events: none; }
+        .search-input {
+            width: 100%; background: var(--card); border: 1px solid var(--border2); border-radius: 14px;
+            padding: 0.9rem 1rem 0.9rem 2.85rem;
+            font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-input::placeholder { color: rgba(138,148,144,0.5); }
+        .search-input:focus { border-color: rgba(201,168,76,0.4); box-shadow: 0 0 0 3px rgba(201,168,76,0.07); }
+        .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+        .member-card {
+            background: var(--card); border: 1px solid var(--border2); border-radius: 18px;
+            padding: 1.25rem 1.35rem; text-decoration: none;
+            display: flex; align-items: center; gap: 1rem;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+            animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        .member-card:hover { background: var(--card2); border-color: rgba(201,168,76,0.2); transform: translateY(-2px); }
+        .member-avatar {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--green) 0%, #0D4A32 100%);
+            border: 1px solid rgba(201,168,76,0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700;
+            color: var(--gold-lt); flex-shrink: 0;
+        }
+        .member-info { min-width: 0; }
+        .member-name { font-size: 0.95rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .member-card:hover .member-name { color: var(--gold-lt); }
+        .member-card-num { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; letter-spacing: 0.04em; }
+        .member-arrow { margin-left: auto; opacity: 0.2; flex-shrink: 0; transition: opacity 0.2s, transform 0.2s; }
+        .member-card:hover .member-arrow { opacity: 0.6; transform: translateX(3px); }
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; color: var(--muted); }
+        .empty-icon { width: 56px; height: 56px; margin: 0 auto 1rem; opacity: 0.3; }
+        .empty-state p { font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="{% url 'member_search' %}" class="nav-brand">
+        <div class="nav-logo">
+            <svg width="20" height="20" viewBox="0 0 44 44" fill="none">
+                <ellipse cx="22" cy="32" rx="13" ry="4.5" fill="rgba(201,168,76,0.25)" stroke="#C9A84C" stroke-width="1.5"/>
+                <ellipse cx="22" cy="27" rx="13" ry="4.5" fill="rgba(201,168,76,0.2)" stroke="#C9A84C" stroke-width="1.5"/>
+                <ellipse cx="22" cy="22" rx="13" ry="4.5" fill="rgba(201,168,76,0.3)" stroke="#C9A84C" stroke-width="1.5"/>
+                <line x1="22" y1="19.2" x2="22" y2="24.8" stroke="#E8C97A" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="19.2" y1="22" x2="24.8" y2="22" stroke="#E8C97A" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <span class="nav-title">Omo<span>Jesu</span> Savings</span>
+    </a>
+
+    <div class="nav-actions">
+        {% if request.user.is_staff %}
+        <a href="{% url 'add_member' %}" class="btn btn-green">+ Add Member</a>
+        {% endif %}
+
+        {% if request.user.is_superuser %}
+        <a href="/admin/" class="btn btn-purple">Admin Panel</a>
+        {% endif %}
+
+        <form method="POST" action="{% url 'logout' %}" class="logout-form">
+            {% csrf_token %}
+            <button type="submit" class="btn">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<main>
+    <h1 class="page-title">Members</h1>
+    <p class="page-subtitle">
+        {{ members|length }} member{{ members|length|pluralize }} found{% if query %} &nbsp;·&nbsp; Searching for "{{ query }}"{% endif %}
+    </p>
+
+    <form method="GET">
+        <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 16 16" fill="none">
+                <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by name or card number…" class="search-input" autocomplete="off">
+        </div>
+    </form>
+
+    <div class="members-grid">
+        {% for member in members %}
+        <a href="{% url 'member_detail' member.id %}" class="member-card" style="animation-delay: {{ forloop.counter0 }}00ms">
+            <div class="member-avatar">{{ member.full_name|first|upper }}</div>
+            <div class="member-info">
+                <p class="member-name">{{ member.full_name }}</p>
+                <p class="member-card-num">{{ member.card_number }}</p>
+            </div>
+            <svg class="member-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </a>
+        {% empty %}
+        <div class="empty-state">
+            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7"/>
+            </svg>
+            <p>No members found{% if query %} for "{{ query }}"{% endif %}.</p>
+        </div>
+        {% endfor %}
+    </div>
+</main>
+
+</body>
+</html>

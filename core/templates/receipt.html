@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt – OmoJesu Savings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #C9A84C; --gold-lt: #E8C97A; --green: #1A6B4A; --green-lt: #22885E;
+            --dark: #0A0E0C; --card: #111812; --border: rgba(201,168,76,0.18);
+            --border2: rgba(255,255,255,0.07); --text: #F0EDE6; --muted: #8A9490;
+        }
+        body {
+            min-height: 100vh; background-color: var(--dark);
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26,107,74,0.35) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(201,168,76,0.12) 0%, transparent 60%);
+            display: flex; align-items: center; justify-content: center;
+            padding: 2rem 1rem; font-family: 'DM Sans', sans-serif; color: var(--text);
+        }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .wrapper { width: 100%; max-width: 500px; animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+        .card { background: var(--card); border: 1px solid var(--border2); border-radius: 24px; padding: 2.5rem; box-shadow: 0 32px 80px rgba(0,0,0,0.4); text-align: center; }
+        .success-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; color: #6ee7b7; }
+        .receipt-detail { margin: 1.5rem 0; }
+        .receipt-row { display: flex; justify-content: space-between; padding: 0.65rem 0; border-bottom: 1px solid var(--border2); font-size: 0.9rem; }
+        .receipt-row:last-child { border-bottom: none; }
+        .receipt-label { color: var(--muted); }
+        .receipt-value { font-weight: 500; }
+        .receipt-amount { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 700; color: #6ee7b7; padding: 1rem 0; }
+        .btn { display: inline-block; margin-top: 1.5rem; background: linear-gradient(135deg, var(--green-lt), var(--green)); border: none; border-radius: 14px; padding: 0.85rem 2rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; color: #fff; text-decoration: none; transition: filter 0.2s; box-shadow: 0 4px 24px rgba(26,107,74,0.4); }
+        .btn:hover { filter: brightness(1.1); }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="card">
+            <div class="success-icon">✅</div>
+            <h1 class="card-title">Payment Successful!</h1>
+            <p style="color:var(--muted);margin-top:0.5rem;">Your contribution has been recorded.</p>
+            
+            <div class="receipt-detail">
+                <div class="receipt-row">
+                    <span class="receipt-label">Member</span>
+                    <span class="receipt-value">{{ member.full_name }}</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-label">Card Number</span>
+                    <span class="receipt-value">{{ member.card_number }}</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-label">Reference</span>
+                    <span class="receipt-value" style="font-size:0.75rem;">{{ contribution.payment_reference }}</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="receipt-label">Date</span>
+                    <span class="receipt-value">{{ contribution.date|date:"M d, Y · H:i" }}</span>
+                </div>
+                <div class="receipt-amount">₦{{ contribution.amount|floatformat:2 }}</div>
+                <div class="receipt-row" style="border-top:2px solid var(--border);padding-top:1rem;margin-top:0.5rem;">
+                    <span class="receipt-label">Payment Method</span>
+                    <span class="receipt-value" style="color:#6ee7b7;">Paystack</span>
+                </div>
+            </div>
+            
+            <a href="{% url 'member_detail' member.id %}" class="btn">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

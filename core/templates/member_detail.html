@@ -1,0 +1,967 @@
+{% load core_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ member.full_name }} – OmoJesu Savings</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --gold: #C9A84C;
+            --gold-lt: #E8C97A;
+            --green: #1A6B4A;
+            --green-lt: #22885E;
+            --dark: #0A0E0C;
+            --card: #111812;
+            --card2: #161E18;
+            --border: rgba(201, 168, 76, 0.18);
+            --border2: rgba(255, 255, 255, 0.07);
+            --text: #F0EDE6;
+            --muted: #8A9490;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+            min-height: 100vh; 
+}
+
+        body {
+            min-height: 100vh;
+            background-color: var(--dark);
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26, 107, 74, 0.35) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(201, 168, 76, 0.12) 0%, transparent 60%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A84C' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px)
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        nav {
+            background: rgba(10, 14, 12, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border2);
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--green), #0D4A32);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 16px rgba(26, 107, 74, 0.4);
+        }
+
+        .nav-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .nav-title span {
+            color: var(--gold);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border2);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, var(--green-lt), var(--green));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(26, 107, 74, 0.4);
+        }
+
+        .btn-green:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-blue {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        .btn-orange {
+            background: rgba(249, 115, 22, 0.15);
+            border-color: rgba(249, 115, 22, 0.3);
+            color: #fdba74;
+        }
+
+        .btn-gold {
+            background: rgba(201, 168, 76, 0.1);
+            border-color: rgba(201, 168, 76, 0.3);
+            color: var(--gold-lt);
+        }
+
+        .btn-paystack {
+            background: linear-gradient(135deg, #0066CC, #0044AA);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(0, 102, 204, 0.4);
+        }
+
+        .btn-paystack:hover {
+            filter: brightness(1.1);
+        }
+
+        .logout-form {
+            display: inline;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, var(--green), #0D4A32);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold-lt);
+            overflow: hidden;
+            box-shadow: 0 0 24px rgba(26, 107, 74, 0.35);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.9rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .profile-meta {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.3rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.78rem;
+            color: var(--muted);
+            text-decoration: none;
+            margin-bottom: 1.1rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--gold-lt);
+        }
+
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media(max-width:1024px) {
+            .dash-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media(max-width:640px) {
+            .dash-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border2);
+            border-radius: 20px;
+            padding: 1.4rem 1.5rem;
+        }
+
+        .card-wide {
+            grid-column: span 2;
+        }
+
+        .card-full {
+            grid-column: 1/-1;
+        }
+
+        @media(max-width:640px) {
+            .card-wide {
+                grid-column: span 1;
+            }
+        }
+
+        .card-label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .card-value.green {
+            color: #6ee7b7;
+        }
+
+        .card-value.red {
+            color: #fca5a5;
+        }
+
+        .card-value.orange {
+            color: #fdba74;
+        }
+
+        .card-value.blue {
+            color: #93c5fd;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 180px;
+        }
+
+        .tx-section-title {
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 0.85rem;
+        }
+
+        .tx-section-title.green {
+            color: #6ee7b7;
+        }
+
+        .tx-section-title.blue {
+            color: #93c5fd;
+        }
+
+        .tx-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border2);
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+        }
+
+        .tx-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .tx-icon.green {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+        }
+
+        .tx-icon.blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+        }
+
+        .tx-label {
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+
+        .tx-date {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-top: 0.15rem;
+        }
+
+        .tx-amount {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .tx-amount.green {
+            color: #6ee7b7;
+        }
+
+        .tx-amount.blue {
+            color: #93c5fd;
+        }
+
+        .tx-empty {
+            font-size: 0.82rem;
+            color: var(--muted);
+            padding: 0.75rem 0;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border2);
+            margin: 1.25rem 0;
+        }
+
+        .loan-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        .loan-table th {
+            text-align: left;
+            padding: 0 0.75rem 0.75rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .loan-table td {
+            padding: 0.7rem 0.75rem;
+            border-top: 1px solid var(--border2);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .badge-green {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .msg-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 10px;
+            padding: 0.65rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.82rem;
+            color: #6ee7b7;
+        }
+
+        .msg-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 10px;
+            padding: 0.65rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.82rem;
+            color: #fca5a5;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #111812;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 24px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+            animation: fadeUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        .modal-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 14px;
+            padding: 0.85rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .modal-input:focus {
+            border-color: rgba(0, 102, 204, 0.45);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.08);
+        }
+
+        .modal-btn {
+            width: 100%;
+            margin-top: 0.4rem;
+            background: linear-gradient(135deg, #0066CC, #0044AA);
+            border: none;
+            border-radius: 14px;
+            padding: 0.95rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #fff;
+            cursor: pointer;
+            transition: filter 0.2s, transform 0.15s;
+            box-shadow: 0 4px 24px rgba(0, 102, 204, 0.35);
+        }
+
+        .modal-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .modal-btn:active {
+            transform: scale(0.985);
+        }
+
+        .modal-hint {
+            font-size: 0.7rem;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 0.75rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="{% if viewer_is_admin %}{% url 'admin_dashboard' %}{% else %}{% url 'member_detail' member.id %}{% endif %}"
+            class="nav-brand">
+            <div class="nav-logo">
+                <svg width="20" height="20" viewBox="0 0 44 44" fill="none">
+                    <ellipse cx="22" cy="32" rx="13" ry="4.5" fill="rgba(201,168,76,0.25)" stroke="#C9A84C"
+                        stroke-width="1.5" />
+                    <ellipse cx="22" cy="27" rx="13" ry="4.5" fill="rgba(201,168,76,0.2)" stroke="#C9A84C"
+                        stroke-width="1.5" />
+                    <ellipse cx="22" cy="22" rx="13" ry="4.5" fill="rgba(201,168,76,0.3)" stroke="#C9A84C"
+                        stroke-width="1.5" />
+                    <line x1="22" y1="19.2" x2="22" y2="24.8" stroke="#E8C97A" stroke-width="1.8"
+                        stroke-linecap="round" />
+                    <line x1="19.2" y1="22" x2="24.8" y2="22" stroke="#E8C97A" stroke-width="1.8"
+                        stroke-linecap="round" />
+                </svg>
+            </div>
+            <span class="nav-title">Omo<span>Jesu</span> Savings</span>
+        </a>
+        <div class="nav-actions">
+            {% if viewer_is_admin %}
+            <a href="{% url 'admin_dashboard' %}" class="btn">Dashboard</a>
+            <a href="{% url 'member_search' %}" class="btn">Members</a>
+            <a href="{% url 'add_contribution' %}" class="btn btn-green">+ Contribution</a>
+            <a href="{% url 'add_loan' %}" class="btn btn-blue">+ Loan</a>
+            <a href="{% url 'add_repayment' %}" class="btn btn-orange">+ Repayment</a>
+            {% else %}
+            <a href="{% url 'edit_profile' member.id %}" class="btn btn-gold">✏️ Edit Profile</a>
+            <a href="{% url 'change_password' %}" class="btn">🔒 Password</a>
+            <a href="{% url 'statement_pdf' member.id %}" class="btn">⬇ Statement</a>
+            {% endif %}
+            <form method="POST" action="{% url 'logout' %}" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="btn">Logout</button>
+            </form>
+        </div>
+    </nav>
+
+    <main>
+
+        {% if viewer_is_admin %}
+        <a href="{% url 'member_search' %}" class="back-link">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+            Back to Members
+        </a>
+        {% endif %}
+
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="{% if msg.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ msg }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- PROFILE HEADER -->
+        <div class="profile-header">
+            <div class="profile-avatar">
+                {% if member.profile_image %}<img src="{{ member.profile_image.url }}" alt="{{ member.full_name }}">
+                {% else %}{{ member.full_name|first|upper }}{% endif %}
+            </div>
+            <div>
+                <h1 class="profile-name">{{ member.full_name }}</h1>
+                <p class="profile-meta">Card: {{ member.card_number }} &nbsp;·&nbsp; Joined {{ member.joined_date|date:"M Y" }}{% if member.is_finance_admin %}&nbsp;·&nbsp; <span style="color:var(--gold-lt);font-weight:500;">Finance Admin</span>{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS FOR MEMBERS (with Paystack) -->
+        {% if viewer_is_member and not viewer_is_admin %}
+        <div class="action-bar">
+            <button onclick="openPaymentModal()" class="btn btn-paystack">
+                💳 Make Payment with Paystack
+            </button>
+            <a href="{% url 'statement_pdf' member.id %}" class="btn btn-gold">⬇ Download Statement</a>
+            <a href="{% url 'edit_profile' member.id %}" class="btn btn-gold">✏️ Edit Profile</a>
+            <a href="{% url 'change_password' %}" class="btn">🔒 Password</a>
+        </div>
+        {% endif %}
+
+        <!-- ADMIN ACTION BUTTONS -->
+        {% if viewer_is_admin %}
+        <div class="action-bar">
+            <a href="{% url 'add_contribution' %}" class="btn btn-green">+ Add Contribution</a>
+            <a href="{% url 'add_loan' %}" class="btn btn-blue">+ Give Loan</a>
+            <a href="{% url 'add_repayment' %}" class="btn btn-orange">+ Add Repayment</a>
+            <a href="{% url 'statement_pdf' member.id %}" class="btn btn-gold">⬇ Download Statement</a>
+        </div>
+        {% endif %}
+
+        <!-- PAYMENT MODAL -->
+        <div id="paymentModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Make Payment</h2>
+                    <button onclick="closePaymentModal()" class="modal-close">×</button>
+                </div>
+
+                <form method="POST" action="{% url 'initialize_payment' member.id %}">
+                    {% csrf_token %}
+                    <div style="margin-bottom:1.25rem;">
+                        <label style="display:block;font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">
+                            Amount (₦)
+                        </label>
+                        <input type="number" name="amount" step="0.01" min="100" required
+                               class="modal-input"
+                               placeholder="Enter amount (min ₦100)">
+                        <p style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem;">Minimum payment: ₦100</p>
+                    </div>
+
+                    <button type="submit" class="modal-btn">
+                        💳 Pay with Paystack
+                    </button>
+
+                    <p class="modal-hint">
+                        🔒 Secured by Paystack. You'll be redirected to complete payment.
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <!-- DASHBOARD GRID -->
+        <div class="dash-grid">
+
+            <!-- SAVINGS HERO CARD -->
+            <div class="card card-wide"
+                style="background:linear-gradient(135deg,rgba(26,107,74,0.25),rgba(10,14,12,0.8));border-color:rgba(201,168,76,0.2);">
+                <p class="card-label">Total Savings</p>
+                <p class="card-value green">{{ summary.total_savings|naira }}</p>
+                <div style="display:flex;gap:1.5rem;margin-top:1.1rem;flex-wrap:wrap;">
+                    <div>
+                        <p style="font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">
+                            Total Loans</p>
+                        <p style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:#93c5fd;">
+                            {{ summary.total_loans|naira }}</p>
+                    </div>
+                    <div>
+                        <p style="font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">
+                            Outstanding</p>
+                        <p style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:#fca5a5;">
+                            {{ summary.outstanding_loan|naira }}</p>
+                    </div>
+                    <div>
+                        <p style="font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">
+                            Repayments</p>
+                        <p style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:#c4b5fd;">
+                            {{ summary.total_repayments|naira }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTEREST CARD -->
+            <div class="card" style="background:rgba(249,115,22,0.07);border-color:rgba(249,115,22,0.2);">
+                <p class="card-label">Loan Interest</p>
+                <p class="card-value orange">{{ summary.loan_interest|naira }}</p>
+                <p style="font-size:0.75rem;color:rgba(253,186,116,0.7);margin-top:0.5rem;line-height:1.5;">Accumulated
+                    from active &amp; completed loans</p>
+            </div>
+
+            <!-- SAVINGS CHART -->
+            <div class="card card-full">
+                <p class="card-label" style="margin-bottom:1rem;">Savings History (Last 6 Months)</p>
+                <div class="chart-wrap">
+                    <canvas id="savingsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- TRANSACTION HISTORY -->
+            <div class="card card-full">
+
+                <p style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">
+                    Total Contributions:
+                    <strong>{{ contributions.count }}</strong>
+                </p>
+
+                <p class="tx-section-title green">Contributions</p>
+
+                {% for c in contributions %}
+                <div class="tx-item">
+
+                    <div class="tx-icon green">↑</div>
+
+                    <div style="flex:1;min-width:0;">
+
+                        <p class="tx-label">
+                            Deposit
+                            {% if c.payment_method == "Paystack" %}
+                            <span style="color:#6ee7b7;font-size:0.7rem;margin-left:6px;">(Paystack)</span>
+                            {% endif %}
+                        </p>
+
+                        <p class="tx-date">
+                            {{ c.date|date:"M d, Y · H:i" }}
+                            {% if c.recorded_by %} · by {{ c.recorded_by.username }}{% endif %}
+                        </p>
+
+                        {% if c.payment_method == "Paystack" %}
+                        <p style="font-size:0.7rem;margin-top:4px;color:{% if c.payment_verified %}#6ee7b7{% else %}#fca5a5{% endif %};">
+                            {% if c.payment_verified %}✓ Verified{% else %}✗ Unverified{% endif %}
+                        </p>
+                        {% endif %}
+
+                    </div>
+
+                    <p class="tx-amount green">
+                        {{ c.amount|naira }}
+                    </p>
+
+                </div>
+                {% empty %}
+                <p class="tx-empty">No contributions recorded yet.</p>
+                {% endfor %}
+
+                <div class="divider"></div>
+
+                <p class="tx-section-title blue">Loan Repayments</p>
+
+                {% for r in repayments %}
+                <div class="tx-item">
+
+                    <div class="tx-icon blue">↓</div>
+
+                    <div style="flex:1;min-width:0;">
+                        <p class="tx-label">Repayment</p>
+
+                        <p class="tx-date">
+                            {{ r.date|date:"M d, Y · H:i" }}
+                            {% if r.recorded_by %} · by {{ r.recorded_by.username }}{% endif %}
+                        </p>
+                    </div>
+
+                    <p class="tx-amount blue">
+                        {{ r.amount|naira }}
+                    </p>
+
+                </div>
+                {% empty %}
+                <p class="tx-empty">No repayments recorded yet.</p>
+                {% endfor %}
+
+            </div>
+
+            <!-- LOAN RECORDS -->
+            {% if loans %}
+            <div class="card card-full">
+                <p class="card-label" style="margin-bottom:1rem;">Loan Records</p>
+                <div style="overflow-x:auto;">
+                    <table class="loan-table">
+                        <thead>
+                            <tr>
+                                <th>Amount</th>
+                                <th>Interest</th>
+                                <th>Total Due</th>
+                                <th>Due Date</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in loans %}
+                            <tr>
+                                <td style="font-weight:600;">{{ loan.amount|naira }}</td>
+                                <td style="color:var(--muted);">{{ loan.interest_rate }}%</td>
+                                <td>{{ loan.total_with_interest|naira }}</td>
+                                <td style="color:var(--muted);">{{ loan.due_date }}</td>
+                                <td>{{ loan.balance_remaining|naira }}</td>
+                                <td>
+                                    {% if loan.is_paid %}
+                                    <span class="badge badge-green">Paid</span>
+                                    {% else %}
+                                    <span class="badge badge-red">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- BANK ACCOUNT CARD — only visible to the member themselves -->
+            {% if viewer_is_member and not viewer_is_admin %}
+            <div class="card card-full" style="background:rgba(201,168,76,0.05);border-color:rgba(201,168,76,0.2);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                    <p class="card-label" style="margin-bottom:0;">💳 Bank Account Details</p>
+                    <a href="{% url 'edit_profile' member.id %}" style="font-size:0.75rem;color:var(--gold-lt);text-decoration:none;">Edit →</a>
+                </div>
+                {% if member.account_number %}
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;">
+                    <div>
+                        <p style="font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">
+                            Bank</p>
+                        <p style="font-weight:600;margin-top:0.25rem;color:var(--gold-lt);">{{ member.bank_name|default:"—" }}</p>
+                    </div>
+                    <div>
+                        <p style="font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">
+                            Account Number</p>
+                        <p style="font-weight:600;margin-top:0.25rem;color:var(--gold-lt);font-family:'Cormorant Garamond',serif;font-size:1.2rem;">
+                            {{ member.account_number }}</p>
+                    </div>
+                    <div>
+                        <p style="font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">
+                            Account Name</p>
+                        <p style="font-weight:600;margin-top:0.25rem;">{{ member.account_name|default:"—" }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <p style="font-size:0.83rem;color:var(--muted);">No bank account added yet. <a href="{% url 'edit_profile' member.id %}" style="color:var(--gold-lt);">Add one →</a></p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </div>
+    </main>
+
+    <script>
+        // Payment Modal Functions
+        function openPaymentModal() {
+            document.getElementById('paymentModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal on outside click
+        document.getElementById('paymentModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePaymentModal();
+            }
+        });
+
+        // Chart
+        const savingsChartLabels = {{ chart_labels|default:"[]"|safe }};
+        const savingsChartData = {{ chart_data|default:"[]"|safe }};
+
+        new Chart(document.getElementById('savingsChart'), {
+            type: 'bar',
+            data: {
+                labels: savingsChartLabels,
+                datasets: [{
+                    label: 'Monthly Contributions (₦)',
+                    data: savingsChartData,
+                    backgroundColor: 'rgba(16,185,129,0.3)',
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#8A9490',
+                            font: { family: 'DM Sans' }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#8A9490' },
+                        grid: { color: 'rgba(255,255,255,0.04)' }
+                    },
+                    y: {
+                        ticks: { color: '#8A9490' },
+                        grid: { color: 'rgba(255,255,255,0.04)' }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>

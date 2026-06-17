@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile – OmoJesu Savings</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --gold: #C9A84C;
+            --gold-lt: #E8C97A;
+            --green: #1A6B4A;
+            --green-lt: #22885E;
+            --dark: #0A0E0C;
+            --card: #111812;
+            --border: rgba(201, 168, 76, 0.18);
+            --border2: rgba(255, 255, 255, 0.07);
+            --text: #F0EDE6;
+            --muted: #8A9490;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--dark);
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26, 107, 74, 0.35) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(201, 168, 76, 0.12) 0%, transparent 60%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 560px;
+            animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.78rem;
+            color: var(--muted);
+            text-decoration: none;
+            margin-bottom: 1.25rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--gold-lt);
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border2);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        /* AVATAR */
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border2);
+        }
+
+        .avatar-img {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--green), #0D4A32);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold-lt);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .avatar-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-info h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .avatar-info p {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.25rem;
+        }
+
+        /* SECTION HEADING */
+        .section-heading {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin: 1.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border2);
+        }
+
+        .section-heading.gold {
+            color: var(--gold);
+            border-color: rgba(201, 168, 76, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 14px;
+            padding: 0.85rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: rgba(201, 168, 76, 0.45);
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.08);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: rgba(138, 148, 144, 0.6);
+        }
+
+        /* Bank fields get gold focus */
+        .bank-field:focus {
+            border-color: rgba(201, 168, 76, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.12) !important;
+        }
+
+        .file-label {
+            display: block;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            font-size: 0.83rem;
+            color: var(--muted);
+        }
+
+        .file-label:hover {
+            border-color: rgba(201, 168, 76, 0.4);
+            background: rgba(201, 168, 76, 0.04);
+            color: var(--gold-lt);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.82rem;
+            color: #6ee7b7;
+        }
+
+        .error-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.82rem;
+            color: #fca5a5;
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 1rem;
+            background: linear-gradient(135deg, var(--green-lt), var(--green));
+            border: none;
+            border-radius: 14px;
+            padding: 0.95rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #fff;
+            cursor: pointer;
+            transition: filter 0.2s, transform 0.15s;
+            box-shadow: 0 4px 24px rgba(26, 107, 74, 0.4);
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: scale(0.985);
+        }
+
+        .change-pw {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .change-pw:hover {
+            color: var(--gold-lt);
+        }
+
+        /* Current bank info box */
+        .bank-info-box {
+            background: rgba(201, 168, 76, 0.06);
+            border: 1px solid rgba(201, 168, 76, 0.18);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            font-size: 0.82rem;
+            line-height: 1.8;
+        }
+
+        .bank-info-box .bank-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bank-info-box .bank-val {
+            font-weight: 600;
+            color: var(--gold-lt);
+        }
+
+        .bank-info-box .no-bank {
+            color: var(--muted);
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <a href="{% url 'member_detail' member.id %}" class="back-link">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+            Back to Dashboard
+        </a>
+
+        <div class="card">
+
+            <!-- AVATAR -->
+            <div class="avatar-section">
+                <div class="avatar-img">
+                    {% if member.profile_image %}
+                    <img src="{{ member.profile_image.url }}" alt="{{ member.full_name }}">
+                    {% else %}
+                    {{ member.full_name|first|upper }}
+                    {% endif %}
+                </div>
+                <div class="avatar-info">
+                    <h2>{{ member.full_name }}</h2>
+                    <p>Card: {{ member.card_number }} · Joined {{ member.joined_date|date:"M Y" }}</p>
+                </div>
+            </div>
+
+            {% if messages %}
+            {% for msg in messages %}
+            <div class="success-box">✓ {{ msg }}</div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- PERSONAL INFO -->
+                <p class="section-heading">Personal Information</p>
+
+                <div class="form-group">
+                    <label class="form-label">Profile Photo</label>
+                    <label class="file-label" for="id_profile_image">
+                        📷 Click to upload a new photo (JPG, PNG)
+                    </label>
+                    <input type="file" name="profile_image" id="id_profile_image" class="file-input" accept="image/*">
+                    <p id="file-name" style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem;text-align:center;">
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    {{ form.phone }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-input" value="{{ member.email|default:'' }}"
+                        placeholder="Enter your email address"
+                        style="width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:14px; padding:0.85rem 1rem; font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--text); outline:none; transition:border-color 0.2s, box-shadow 0.2s;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    {{ form.address }}
+                </div>
+
+                <!-- BANK ACCOUNT -->
+                <p class="section-heading gold">💳 Bank Account Details</p>
+
+                <!-- Show current bank info if already set -->
+                {% if member.account_number %}
+                <div class="bank-info-box">
+                    <div class="bank-row">
+                        <span style="color:var(--muted);">Bank</span>
+                        <span class="bank-val">{{ member.bank_name|default:"—" }}</span>
+                    </div>
+                    <div class="bank-row">
+                        <span style="color:var(--muted);">Account Number</span>
+                        <span class="bank-val">{{ member.account_number }}</span>
+                    </div>
+                    <div class="bank-row">
+                        <span style="color:var(--muted);">Account Name</span>
+                        <span class="bank-val">{{ member.account_name|default:"—" }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="bank-info-box">
+                    <p class="no-bank">No bank account added yet. Fill in the fields below to add one.</p>
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="form-label">Bank Name</label>
+                    <input type="text" name="bank_name" class="bank-field" value="{{ member.bank_name }}"
+                        placeholder="e.g. First Bank, GTBank, Zenith, Access">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Account Number</label>
+                    <input type="text" name="account_number" class="bank-field" value="{{ member.account_number }}"
+                        placeholder="10-digit account number" maxlength="10" inputmode="numeric">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Account Name</label>
+                    <input type="text" name="account_name" class="bank-field" value="{{ member.account_name }}"
+                        placeholder="As it appears on your bank records">
+                </div>
+
+                {% if form.errors %}
+                <div class="error-box">
+                    {% for field in form %}
+                    {% for error in field.errors %}{{ error }} {% endfor %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn">Save Changes ✓</button>
+            </form>
+
+            <a href="{% url 'change_password' %}" class="change-pw">🔒 Change Password</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('id_profile_image').addEventListener('change', function () {
+            const name = this.files[0] ? this.files[0].name : '';
+            document.getElementById('file-name').textContent = name ? '✓ ' + name : '';
+        });
+    </script>
+</body>
+
+</html>

@@ -1,9 +1,15 @@
+{% load static %}
+{% load core_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Receipt – OmoJesu Savings</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'core/images/site.webmanifest' %}">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,14 +31,15 @@
         .card { background: var(--card); border: 1px solid var(--border2); border-radius: 24px; padding: 2.5rem; box-shadow: 0 32px 80px rgba(0,0,0,0.4); text-align: center; }
         .success-icon { font-size: 4rem; margin-bottom: 1rem; }
         .card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; color: #6ee7b7; }
-        .receipt-detail { margin: 1.5rem 0; }
+        .receipt-detail { margin: 1.5rem 0; text-align: left; }
         .receipt-row { display: flex; justify-content: space-between; padding: 0.65rem 0; border-bottom: 1px solid var(--border2); font-size: 0.9rem; }
         .receipt-row:last-child { border-bottom: none; }
         .receipt-label { color: var(--muted); }
         .receipt-value { font-weight: 500; }
-        .receipt-amount { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 700; color: #6ee7b7; padding: 1rem 0; }
+        .receipt-amount { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 700; color: #6ee7b7; padding: 1rem 0; text-align: center; }
         .btn { display: inline-block; margin-top: 1.5rem; background: linear-gradient(135deg, var(--green-lt), var(--green)); border: none; border-radius: 14px; padding: 0.85rem 2rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; color: #fff; text-decoration: none; transition: filter 0.2s; box-shadow: 0 4px 24px rgba(26,107,74,0.4); }
         .btn:hover { filter: brightness(1.1); }
+        .fee-note { font-size: 0.7rem; color: var(--muted); margin-top: 1rem; }
     </style>
 </head>
 <body>
@@ -65,6 +72,8 @@
                     <span class="receipt-value" style="color:#6ee7b7;">Paystack</span>
                 </div>
             </div>
+            
+            <p class="fee-note">⚠️ Paystack processing fee was deducted before payment reached the church account.</p>
             
             <a href="{% url 'member_detail' member.id %}" class="btn">Back to Dashboard</a>
         </div>

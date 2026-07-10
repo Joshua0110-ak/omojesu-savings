@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,6 +6,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile – OmoJesu Savings</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'core/images/site.webmanifest' %}">
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap"
         rel="stylesheet">
@@ -303,6 +308,15 @@
             color: var(--muted);
             font-style: italic;
         }
+
+        select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A9490' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+    cursor: pointer;
+}
     </style>
 </head>
 
@@ -362,7 +376,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-input" value="{{ member.email|default:'' }}"
+                    <input type="email" name="email" class="form-input" value="{{ member.email|default:'-' }}"
                         placeholder="Enter your email address"
                         style="width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:14px; padding:0.85rem 1rem; font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--text); outline:none; transition:border-color 0.2s, box-shadow 0.2s;">
                 </div>
@@ -373,47 +387,44 @@
                 </div>
 
                 <!-- BANK ACCOUNT -->
-                <p class="section-heading gold">💳 Bank Account Details</p>
+<p class="section-heading gold">💳 Bank Account Details</p>
 
-                <!-- Show current bank info if already set -->
-                {% if member.account_number %}
-                <div class="bank-info-box">
-                    <div class="bank-row">
-                        <span style="color:var(--muted);">Bank</span>
-                        <span class="bank-val">{{ member.bank_name|default:"—" }}</span>
-                    </div>
-                    <div class="bank-row">
-                        <span style="color:var(--muted);">Account Number</span>
-                        <span class="bank-val">{{ member.account_number }}</span>
-                    </div>
-                    <div class="bank-row">
-                        <span style="color:var(--muted);">Account Name</span>
-                        <span class="bank-val">{{ member.account_name|default:"—" }}</span>
-                    </div>
-                </div>
-                {% else %}
-                <div class="bank-info-box">
-                    <p class="no-bank">No bank account added yet. Fill in the fields below to add one.</p>
-                </div>
-                {% endif %}
+<!-- Show current bank info if already set -->
+{% if member.account_number %}
+<div class="bank-info-box">
+    <div class="bank-row">
+        <span style="color:var(--muted);">Bank</span>
+        <span class="bank-val">{{ member.bank_name|default:"—" }}</span>
+    </div>
+    <div class="bank-row">
+        <span style="color:var(--muted);">Account Number</span>
+        <span class="bank-val">{{ member.account_number }}</span>
+    </div>
+    <div class="bank-row">
+        <span style="color:var(--muted);">Account Name</span>
+        <span class="bank-val">{{ member.account_name|default:"—" }}</span>
+    </div>
+</div>
+{% else %}
+<div class="bank-info-box">
+    <p class="no-bank">No bank account added yet. Fill in the fields below to add one.</p>
+</div>
+{% endif %}
 
-                <div class="form-group">
-                    <label class="form-label">Bank Name</label>
-                    <input type="text" name="bank_name" class="bank-field" value="{{ member.bank_name }}"
-                        placeholder="e.g. First Bank, GTBank, Zenith, Access">
-                </div>
+<div class="form-group">
+    <label class="form-label">Bank Name</label>
+    {{ form.bank_name }}  
+</div>
 
-                <div class="form-group">
-                    <label class="form-label">Account Number</label>
-                    <input type="text" name="account_number" class="bank-field" value="{{ member.account_number }}"
-                        placeholder="10-digit account number" maxlength="10" inputmode="numeric">
-                </div>
+<div class="form-group">
+    <label class="form-label">Account Number</label>
+    {{ form.account_number }}
+</div>
 
-                <div class="form-group">
-                    <label class="form-label">Account Name</label>
-                    <input type="text" name="account_name" class="bank-field" value="{{ member.account_name }}"
-                        placeholder="As it appears on your bank records">
-                </div>
+<div class="form-group">
+    <label class="form-label">Account Name</label>
+    {{ form.account_name }}
+</div>
 
                 {% if form.errors %}
                 <div class="error-box">

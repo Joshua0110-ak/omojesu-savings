@@ -174,6 +174,28 @@ class PaymentTransaction(models.Model):
     def __str__(self):
         return f"{self.member.full_name} — ₦{self.amount} ({self.status})"
 
+class AuditLog(models.Model):
+    """Audit log for all sensitive actions."""
+    
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='audit_logs')
+    action = models.CharField(max_length=200)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    method = models.CharField(max_length=10)
+    data = models.JSONField(default=dict, blank=True)
+    status_code = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['user']),
+            models.Index(fields=['action']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user} - {self.action} - {self.created_at}"
 
 # ── SIGNAL: auto-delete User when Member is deleted ───────────────────────────
 

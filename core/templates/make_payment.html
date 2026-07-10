@@ -1,9 +1,15 @@
+{% load static %}
+{% load core_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Make Payment – OmoJesu Savings</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'core/images/site.webmanifest' %}">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,48 +47,54 @@
         .btn:hover { filter: brightness(1.1); }
         .btn:active { transform: scale(0.985); }
         .info-box { background: rgba(0,102,204,0.07); border: 1px solid rgba(0,102,204,0.18); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: 0.78rem; color: #93c5fd; line-height: 1.6; }
+        .fee-warning { background: rgba(251,191,36,0.07); border: 1px solid rgba(251,191,36,0.18); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: 0.78rem; color: #fbbf24; line-height: 1.6; }
+        .error-box { background: rgba(220,60,60,0.1); border: 1px solid rgba(220,60,60,0.25); border-radius: 10px; padding: 0.65rem 0.9rem; margin-bottom: 1rem; font-size: 0.82rem; color: #fca5a5; }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <a href="{% url 'member_detail' member.id %}" class="back-link">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Back to Dashboard
-        </a>
-        <div class="card">
-            <div class="card-header">
-                <div class="card-icon">💳</div>
-                <h1 class="card-title">Pay with Paystack</h1>
+<div class="wrapper">
+    <a href="{% url 'member_detail' member.id %}" class="back-link">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Dashboard
+    </a>
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon">💳</div>
+            <h1 class="card-title">Pay with Paystack</h1>
+        </div>
+        
+        <div class="fee-warning">
+            ⚠️ <strong>Paystack charges a 1.5% + ₦100 processing fee</strong> per transaction.
+        </div>
+        
+        <div class="info-box">
+            💡 Enter the amount you want to contribute. You'll be redirected to Paystack's secure payment page.
+        </div>
+
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="error-box">{{ msg }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Amount (₦)</label>
+                <input type="number" name="amount" class="form-input" 
+                       placeholder="Enter amount" min="100" step="0.01" required>
+                <p style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem;">Minimum payment: ₦100</p>
             </div>
             
-            <div class="info-box">
-                💡 Enter the amount you want to contribute. You'll be redirected to Paystack's secure payment page.
-            </div>
-
-            {% if messages %}
-            {% for msg in messages %}
-            <div style="background:rgba(220,60,60,0.1);border:1px solid rgba(220,60,60,0.25);border-radius:10px;padding:0.65rem 0.9rem;margin-bottom:1rem;font-size:0.82rem;color:#F4A0A0;">{{ msg }}</div>
-            {% endfor %}
-            {% endif %}
-
-            <form method="POST">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label class="form-label">Amount (₦)</label>
-                    <input type="number" name="amount" class="form-input" 
-                           placeholder="Enter amount" min="100" step="0.01" required>
-                    <p style="font-size:0.72rem;color:var(--muted);margin-top:0.4rem;">Minimum payment: ₦100</p>
-                </div>
-                
-                <button type="submit" class="btn">
-                    💳 Proceed to Paystack
-                </button>
-                
-                <p style="font-size:0.7rem;color:var(--muted);text-align:center;margin-top:0.75rem;">
-                    🔒 Secured by Paystack. Your payment is safe and encrypted.
-                </p>
-            </form>
-        </div>
+            <button type="submit" class="btn">
+                💳 Proceed to Paystack
+            </button>
+            
+            <p style="font-size:0.7rem;color:var(--muted);text-align:center;margin-top:0.75rem;">
+                🔒 Secured by Paystack. Your payment is safe and encrypted.
+            </p>
+        </form>
     </div>
+</div>
 </body>
 </html>

@@ -130,29 +130,60 @@ class LoanRepaymentForm(forms.ModelForm):
         return cleaned_data
 
 
-# ── ADD MEMBER (admin) ────────────────────────────────────────────────────────
+# ── BANK CHOICES ──────────────────────────────────────────────────────────────
+
+BANK_CHOICES = [
+    ('', 'Select Bank'),  # Empty option
+    ('Access Bank', 'Access Bank'),
+    ('Citibank', 'Citibank'),
+    ('Ecobank', 'Ecobank'),
+    ('Fidelity Bank', 'Fidelity Bank'),
+    ('First Bank', 'First Bank'),
+    ('First City Monument Bank', 'FCMB'),
+    ('Globus Bank', 'Globus Bank'),
+    ('Guaranty Trust Bank', 'GTBank'),
+    ('Heritage Bank', 'Heritage Bank'),
+    ('Keystone Bank', 'Keystone Bank'),
+    ('OPay', 'OPay'),
+    ('PalmPay', 'PalmPay'),
+    ('Polaris Bank', 'Polaris Bank'),
+    ('Providus Bank', 'Providus Bank'),
+    ('Stanbic IBTC Bank', 'Stanbic IBTC'),
+    ('Standard Chartered', 'Standard Chartered'),
+    ('Sterling Bank', 'Sterling Bank'),
+    ('SunTrust Bank', 'SunTrust Bank'),
+    ('Titan Trust Bank', 'Titan Trust Bank'),
+    ('Union Bank', 'Union Bank'),
+    ('United Bank for Africa', 'UBA'),
+    ('Unity Bank', 'Unity Bank'),
+    ('Wema Bank', 'Wema Bank'),
+    ('Zenith Bank', 'Zenith Bank'),
+]
+
+
+# ── MEMBER FORM (Admin adds member) ──────────────────────────────────────────
 
 class MemberForm(forms.ModelForm):
     class Meta:
-        model  = Member
-        fields = ["full_name", "email", "phone", "address", "card_number"]  # ← ADD 'email'
+        model = Member
+        fields = ["full_name", "email", "phone", "address", "card_number"]
         widgets = {
             "full_name":   forms.TextInput(attrs={"class": _INPUT, "placeholder": "Full name"}),
-            "email":       forms.EmailInput(attrs={"class": _INPUT, "placeholder": "Email address"}),  # ← ADD THIS
+            "email":       forms.EmailInput(attrs={"class": _INPUT, "placeholder": "Email address"}),
             "phone":       forms.TextInput(attrs={"class": _INPUT, "placeholder": "Phone number"}),
             "address":     forms.Textarea(attrs={"class": _INPUT, "placeholder": "Address", "rows": 3}),
             "card_number": forms.TextInput(attrs={"class": _INPUT, "placeholder": "Card number"}),
         }
 
 
-# ── PROFILE UPDATE (member edits own profile) ─────────────────────────────────
+# ── PROFILE UPDATE FORM (Member edits own profile) ───────────────────────────
 
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
-        model  = Member
+        model = Member
         fields = [
             "profile_image",
-            "email", 
+            "email",
             "phone",
             "address",
             "bank_name",
@@ -160,12 +191,34 @@ class ProfileUpdateForm(forms.ModelForm):
             "account_name",
         ]
         widgets = {
-            "email":          forms.EmailInput(attrs={"class": _INPUT, "placeholder": "Email address"}),
-            "phone":          forms.TextInput(attrs={"class": _INPUT, "placeholder": "Phone number"}),
-            "address":        forms.Textarea(attrs={"class": _INPUT, "placeholder": "Address", "rows": 3}),
-            "bank_name":      forms.TextInput(attrs={"class": _INPUT, "placeholder": "e.g. First Bank, GTBank, Zenith"}),
-            "account_number": forms.TextInput(attrs={"class": _INPUT, "placeholder": "10-digit account number"}),
-            "account_name":   forms.TextInput(attrs={"class": _INPUT, "placeholder": "Account name (as on bank records)"}),
+            "email": forms.EmailInput(attrs={
+                "class": _INPUT, 
+                "placeholder": "Enter your email address"
+            }),
+            "phone": forms.TextInput(attrs={
+                "class": _INPUT, 
+                "placeholder": "Phone number"
+            }),
+            "address": forms.Textarea(attrs={
+                "class": _INPUT, 
+                "placeholder": "Address", 
+                "rows": 3
+            }),
+            # ── FIXED: Better dropdown styling ──
+            "bank_name": forms.Select(attrs={
+                "class": "w-full rounded-2xl bg-white/10 border border-white/20 p-4 text-white outline-none focus:border-emerald-400 transition appearance-none cursor-pointer",
+                "style": "background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A9490' d='M6 8L1 3h10z'/%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem;"
+            }, choices=BANK_CHOICES),
+            "account_number": forms.TextInput(attrs={
+                "class": _INPUT, 
+                "placeholder": "10-digit account number",
+                "maxlength": 10,
+                "pattern": "[0-9]{10}",
+            }),
+            "account_name": forms.TextInput(attrs={
+                "class": _INPUT, 
+                "placeholder": "Account name (as on bank records)"
+            }),
         }
 
     def clean_account_number(self):

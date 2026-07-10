@@ -44,12 +44,19 @@ def outstanding_loan(member):
 
 def member_summary(member):
     """Get complete summary for a single member."""
+    savings = total_savings(member)
+    loans = total_loans(member)
+    repayments = total_repayments(member)
+    outstanding = outstanding_loan(member)
+    interest = total_loan_interest(member)
+    
     return {
-        "total_savings":    total_savings(member),
-        "total_loans":      total_loans(member),
-        "total_repayments": total_repayments(member),
-        "outstanding_loan": outstanding_loan(member),
-        "loan_interest":    total_loan_interest(member),
+        "total_savings": savings,
+        "total_loans": loans,
+        "total_repayments": repayments,
+        "outstanding_loan": outstanding,
+        "loan_interest": interest,
+        "available_balance": max(savings - outstanding, Decimal('0')),
     }
 
 
@@ -156,3 +163,32 @@ def payment_summary():
         "manual_total": manual,
         "paystack_total": paystack,
     }
+    
+    
+# ── TOTAL INTEREST ACCRUED (All Members) ─────────────────────────────────────
+
+def total_interest_all():
+    """Calculate total interest accrued across ALL members."""
+    from decimal import Decimal
+    loans = Loan.objects.all()
+    total = Decimal('0')
+    for loan in loans:
+        total += loan.amount * loan.interest_rate / 100
+    return total
+
+
+# ── TOTAL REPAYMENTS (All Members) ───────────────────────────────────────────
+
+def total_repayments_all():
+    """Calculate total repayments made across ALL members."""
+    result = LoanRepayment.objects.aggregate(t=Sum('amount'))['t']
+    return result or Decimal('0')
+
+def has_pending_loan(member):
+    """Check if a member has any pending (unpaid) loans."""
+    return Loan.objects.filter(member=member, is_paid=False).exists()
+
+
+def get_pending_loans(member):
+    """Get all pending loans for a member."""
+    return Loan.objects.filter(member=member, is_paid=False)    

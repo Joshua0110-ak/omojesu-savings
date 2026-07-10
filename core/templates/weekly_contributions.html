@@ -1,0 +1,327 @@
+{% load core_tags %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Contributions Review - OmoJesu Savings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #0A0E0C;
+            color: #F0EDE6;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #111812;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.07);
+            padding: 2rem;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+        }
+        /* Print Styles */
+        @media print {
+            body { background: white; padding: 0; }
+            .container { background: white; border: none; box-shadow: none; padding: 1.5rem; color: #1a1a1a; }
+            .no-print { display: none !important; }
+            .header-title { color: #1a1a1a !important; }
+            .header-sub { color: #666 !important; }
+            .card { border-color: #ddd !important; }
+            .table th { background: #1A6B4A !important; color: white !important; }
+            .footer { border-top: 1px solid #ddd !important; }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-bottom: 2px solid var(--border2);
+            padding-bottom: 1.5rem;
+        }
+        .header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold-lt);
+        }
+        .header p { color: var(--muted); font-size: 0.85rem; }
+        .header-right { text-align: right; }
+
+        .filter-section {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            border: 1px solid var(--border2);
+            align-items: center;
+        }
+        .filter-btn {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border2);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .filter-btn:hover { background: rgba(255,255,255,0.05); }
+        .filter-btn.active { background: var(--green); border-color: var(--green); color: white; }
+        .filter-btn.print { background: var(--gold); border-color: var(--gold); color: var(--dark); }
+        .filter-btn.print:hover { filter: brightness(1.1); }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .summary-card {
+            background: rgba(255,255,255,0.03);
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border2);
+            text-align: center;
+        }
+        .summary-card .label { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+        .summary-card .value { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700; margin-top: 0.2rem; }
+        .summary-card .value.gold { color: var(--gold-lt); }
+        .summary-card .value.green { color: #6ee7b7; }
+        .summary-card .value.blue { color: #93c5fd; }
+
+        .date-group {
+            margin-bottom: 2rem;
+        }
+        .date-group h3 {
+            font-size: 1.2rem;
+            color: var(--gold-lt);
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .table-wrap { overflow-x: auto; }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .table th {
+            background: rgba(26,107,74,0.2);
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 2px solid var(--border2);
+        }
+        .table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .table tr:hover { background: rgba(255,255,255,0.02); }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        .total-row {
+            background: rgba(201,168,76,0.08) !important;
+            font-weight: 700;
+            border-top: 2px solid var(--gold);
+        }
+        .total-row td { padding: 1rem; }
+
+        .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
+
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border2);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--muted);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1.25rem; }
+            .header { flex-direction: column; }
+            .header-right { text-align: left; width: 100%; }
+            .summary-grid { grid-template-columns: 1fr 1fr; }
+            .table { font-size: 0.7rem; }
+            .table th, .table td { padding: 0.4rem 0.5rem; }
+            .filter-section { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="statement">
+    
+    <!-- HEADER -->
+    <div class="header">
+        <div>
+            <h1>🏦 Weekly Contributions Review</h1>
+            <p>
+                Period: {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}
+                <span style="font-size:0.8rem; color:var(--muted); display:block; margin-top:0.25rem;">
+                    Total: {{ total_contributions }} contributions · {{ total_members }} members
+                </span>
+            </p>
+        </div>
+        <div class="header-right">
+            <div style="font-size:0.8rem; color:var(--muted);">Generated: {{ print_date|date:"M d, Y · H:i" }}</div>
+        </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="label">💰 Total Contributions</div>
+            <div class="value gold">{{ total_contributions }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">💵 Total Amount</div>
+            <div class="value green">{{ total_amount|naira }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">👥 Members</div>
+            <div class="value blue">{{ total_members }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">📅 Days</div>
+            <div class="value gold">{{ contributions_by_date|length }}</div>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-section no-print">
+        <a href="?date_filter=today" class="filter-btn {% if date_filter == 'today' %}active{% endif %}">Today</a>
+        <a href="?date_filter=last_sunday" class="filter-btn {% if date_filter == 'last_sunday' %}active{% endif %}">Last Sunday</a>
+        <a href="?date_filter=this_week" class="filter-btn {% if date_filter == 'this_week' %}active{% endif %}">This Week</a>
+        <a href="?date_filter=last_week" class="filter-btn {% if date_filter == 'last_week' %}active{% endif %}">Last Week</a>
+        <a href="?date_filter=month" class="filter-btn {% if date_filter == 'month' %}active{% endif %}">This Month</a>
+        
+        <input type="date" id="customDate" onchange="window.location.href='?date='+this.value" 
+               style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:8px; padding:0.4rem 0.8rem; color:var(--text); font-size:0.75rem;">
+
+        <button onclick="window.print()" class="filter-btn print" style="margin-left:auto;">🖨️ Print</button>
+        <a href="{% url 'admin_dashboard' %}" class="filter-btn">← Back</a>
+    </div>
+
+    <!-- CONTRIBUTIONS BY DATE -->
+    {% if contributions_by_date %}
+        {% for date_key, contribs in contributions_by_date.items %}
+        <div class="date-group">
+            <h3>📅 {{ date_key|date:"l, F d, Y" }}</h3>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Member</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in contribs %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'member_detail' c.member.id %}" style="color:var(--gold-lt); text-decoration:none;">
+                                    {{ c.member.full_name }}
+                                </a>
+                                <br>
+                                <span style="font-size:0.65rem; color:var(--muted);">{{ c.member.card_number }}</span>
+                            </td>
+                            <td style="color:#6ee7b7; font-weight:600;">{{ c.amount|naira }}</td>
+                            <td>
+                                {% if c.payment_method == "Paystack" %}
+                                    <span style="color:#6ee7b7;">💳 Paystack</span>
+                                {% else %}
+                                    <span style="color:#93c5fd;">📝 Manual</span>
+                                {% endif %}
+                            </td>
+                            <td style="color:var(--muted); font-size:0.8rem;">{{ c.date|date:"H:i" }}</td>
+                            <td>
+                                {% if c.payment_verified %}
+                                    <span style="color:#6ee7b7;">✅ Verified</span>
+                                {% else %}
+                                    <span style="color:#fca5a5;">⏳ Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="2" style="text-align:right; font-size:0.9rem;">Daily Total</td>
+                            <td style="color:#6ee7b7; font-weight:700; font-size:0.9rem;">
+                                {{ contribs|sum_amount|naira }}
+                            </td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- GRAND TOTAL -->
+        <div class="summary-grid" style="margin-top:2rem; border-top:2px solid var(--gold); padding-top:1.5rem;">
+            <div class="summary-card" style="border-color:var(--gold);">
+                <div class="label">📊 Grand Total</div>
+                <div class="value gold">{{ total_amount|naira }}</div>
+            </div>
+            <div class="summary-card" style="border-color:var(--gold);">
+                <div class="label">📅 Total Contributions</div>
+                <div class="value gold">{{ total_contributions }}</div>
+            </div>
+            <div class="summary-card" style="border-color:var(--gold);">
+                <div class="label">👥 Unique Members</div>
+                <div class="value gold">{{ total_members }}</div>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p style="font-size:2rem;">📭</p>
+            <p>No contributions found for this period.</p>
+            <p style="font-size:0.8rem; margin-top:0.5rem;">Try selecting a different date range.</p>
+        </div>
+    {% endif %}
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div>
+            <strong>OmoJesu Savings</strong><br>
+            Weekly Contributions Review
+        </div>
+        <div style="text-align:right;">
+            <div>Generated: {{ print_date|date:"M d, Y · H:i" }}</div>
+            <div style="font-size:0.65rem; color:var(--muted);">
+                This is a computer-generated report.
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

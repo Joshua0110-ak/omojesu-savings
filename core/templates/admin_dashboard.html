@@ -1,205 +1,507 @@
+{% load static %}
 <!DOCTYPE html>
 {% load core_tags %}
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard – OmoJesu Savings</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'core/images/site.webmanifest' %}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         :root {
-            --gold:#C9A84C; --gold-lt:#E8C97A; --green:#1A6B4A; --green-lt:#22885E;
-            --dark:#0A0E0C; --card:#111812; --card2:#161E18;
-            --border:rgba(201,168,76,0.18); --border2:rgba(255,255,255,0.07);
-            --text:#F0EDE6; --muted:#8A9490;
+            --gold: #C9A84C;
+            --gold-lt: #E8C97A;
+            --green: #1A6B4A;
+            --green-lt: #22885E;
+            --dark: #0A0E0C;
+            --card: #111812;
+            --card2: #161E18;
+            --border: rgba(201, 168, 76, 0.18);
+            --border2: rgba(255, 255, 255, 0.07);
+            --text: #F0EDE6;
+            --muted: #8A9490;
         }
+
         body {
-            min-height:100vh; background-color:var(--dark);
+            min-height: 100vh;
+            background-color: var(--dark);
             background-image:
-                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26,107,74,0.35) 0%, transparent 65%),
-                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(201,168,76,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26, 107, 74, 0.35) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(201, 168, 76, 0.12) 0%, transparent 60%),
                 url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A84C' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            font-family:'DM Sans',sans-serif; color:var(--text);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
         }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
         nav {
-            background:rgba(10,14,12,0.85); backdrop-filter:blur(16px);
-            border-bottom:1px solid var(--border2); padding:0.85rem 1.5rem;
-            display:flex; align-items:center; justify-content:space-between;
-            gap:1rem; flex-wrap:wrap; position:sticky; top:0; z-index:50;
+            background: rgba(10, 14, 12, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border2);
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
-        .nav-brand { display:flex; align-items:center; gap:0.6rem; text-decoration:none; }
-        .nav-logo { width:34px; height:34px; background:linear-gradient(135deg,var(--green),#0D4A32); border-radius:10px; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; box-shadow:0 0 16px rgba(26,107,74,0.4); }
-        .nav-title { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:700; color:var(--text); }
-        .nav-title span { color:var(--gold); }
-        .nav-actions { display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
-        .btn { font-family:'DM Sans',sans-serif; font-size:0.8rem; font-weight:500; padding:0.5rem 1rem; border-radius:10px; border:1px solid var(--border2); background:rgba(255,255,255,0.05); color:var(--text); text-decoration:none; cursor:pointer; transition:background 0.2s; white-space:nowrap; }
-        .btn:hover { background:rgba(255,255,255,0.1); }
-        .btn-green { background:linear-gradient(135deg,var(--green-lt),var(--green)); border-color:transparent; color:#fff; box-shadow:0 2px 12px rgba(26,107,74,0.4); }
-        .btn-green:hover { filter:brightness(1.1); }
-        .btn-gold { background:rgba(201,168,76,0.1); border-color:rgba(201,168,76,0.3); color:var(--gold-lt); }
-        .logout-form { display:inline; }
-        main { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 4rem; animation:fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
-        .page-title { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:700; }
-        .page-sub { font-size:0.8rem; color:var(--muted); margin-top:0.3rem; }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--green), #0D4A32);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 16px rgba(26, 107, 74, 0.4);
+        }
+
+        .nav-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .nav-title span {
+            color: var(--gold);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border2);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, var(--green-lt), var(--green));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(26, 107, 74, 0.4);
+        }
+
+        .btn-green:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-gold {
+            background: rgba(201, 168, 76, 0.1);
+            border-color: rgba(201, 168, 76, 0.3);
+            color: var(--gold-lt);
+        }
+
+        .logout-form {
+            display: inline;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .page-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .page-sub {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 0.3rem;
+        }
+
         /* KPI GRID */
-        .kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; margin:1.75rem 0; }
-        .kpi-card { background:var(--card); border:1px solid var(--border2); border-radius:18px; padding:1.25rem; }
-        .kpi-label { font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.5rem; }
-        .kpi-value { font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:700; line-height:1; }
-        .kpi-value.green  { color:#6ee7b7; }
-        .kpi-value.blue   { color:#93c5fd; }
-        .kpi-value.red    { color:#fca5a5; }
-        .kpi-value.orange { color:#fdba74; }
-        .kpi-value.gold   { color:var(--gold-lt); }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            margin: 1.75rem 0;
+        }
+
+        .kpi-card {
+            background: var(--card);
+            border: 1px solid var(--border2);
+            border-radius: 18px;
+            padding: 1.25rem;
+        }
+
+        .kpi-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.9rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .kpi-value.green {
+            color: #6ee7b7;
+        }
+
+        .kpi-value.blue {
+            color: #93c5fd;
+        }
+
+        .kpi-value.red {
+            color: #fca5a5;
+        }
+
+        .kpi-value.orange {
+            color: #fdba74;
+        }
+
+        .kpi-value.gold {
+            color: var(--gold-lt);
+        }
+
         /* TWO-COL */
-        .two-col { display:grid; grid-template-columns:2fr 1fr; gap:1rem; margin-bottom:1rem; }
-        @media(max-width:900px) { .two-col { grid-template-columns:1fr; } }
-        .card { background:var(--card); border:1px solid var(--border2); border-radius:20px; padding:1.5rem; }
-        .card-title { font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:1.25rem; }
-        .chart-wrap { position:relative; height:220px; }
+        .two-col {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media(max-width:900px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border2);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 0.78rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 1.25rem;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 220px;
+        }
+
         /* LEADERBOARD */
-        .leader-item { display:flex; align-items:center; gap:0.85rem; padding:0.7rem 0; border-bottom:1px solid var(--border2); }
-        .leader-item:last-child { border-bottom:none; }
-        .leader-rank { width:24px; height:24px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:0.72rem; font-weight:700; flex-shrink:0; }
-        .rank-1 { background:rgba(201,168,76,0.25); color:var(--gold-lt); }
-        .rank-2 { background:rgba(200,200,200,0.15); color:#ccc; }
-        .rank-3 { background:rgba(180,100,40,0.2); color:#e8a87c; }
-        .rank-n { background:rgba(255,255,255,0.05); color:var(--muted); }
-        .leader-avatar { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,var(--green),#0D4A32); border:1px solid rgba(201,168,76,0.15); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:700; color:var(--gold-lt); flex-shrink:0; }
-        .leader-name { font-size:0.88rem; font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .leader-amount { font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:700; white-space:nowrap; }
-        .leader-amount.green { color:#6ee7b7; }
-        .leader-amount.red   { color:#fca5a5; }
+        .leader-item {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.7rem 0;
+            border-bottom: 1px solid var(--border2);
+        }
+
+        .leader-item:last-child {
+            border-bottom: none;
+        }
+
+        .leader-rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .rank-1 {
+            background: rgba(201, 168, 76, 0.25);
+            color: var(--gold-lt);
+        }
+
+        .rank-2 {
+            background: rgba(200, 200, 200, 0.15);
+            color: #ccc;
+        }
+
+        .rank-3 {
+            background: rgba(180, 100, 40, 0.2);
+            color: #e8a87c;
+        }
+
+        .rank-n {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--muted);
+        }
+
+        .leader-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--green), #0D4A32);
+            border: 1px solid rgba(201, 168, 76, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gold-lt);
+            flex-shrink: 0;
+        }
+
+        .leader-name {
+            font-size: 0.88rem;
+            font-weight: 500;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .leader-amount {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .leader-amount.green {
+            color: #6ee7b7;
+        }
+
+        .leader-amount.red {
+            color: #fca5a5;
+        }
     </style>
 </head>
+
 <body>
-<nav>
-    <a href="{% url 'admin_dashboard' %}" class="nav-brand">
-        <div class="nav-logo">
-            <svg width="20" height="20" viewBox="0 0 44 44" fill="none">
-                <ellipse cx="22" cy="32" rx="13" ry="4.5" fill="rgba(201,168,76,0.25)" stroke="#C9A84C" stroke-width="1.5"/>
-                <ellipse cx="22" cy="27" rx="13" ry="4.5" fill="rgba(201,168,76,0.2)"  stroke="#C9A84C" stroke-width="1.5"/>
-                <ellipse cx="22" cy="22" rx="13" ry="4.5" fill="rgba(201,168,76,0.3)"  stroke="#C9A84C" stroke-width="1.5"/>
-                <line x1="22" y1="19.2" x2="22" y2="24.8" stroke="#E8C97A" stroke-width="1.8" stroke-linecap="round"/>
-                <line x1="19.2" y1="22" x2="24.8" y2="22" stroke="#E8C97A" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
+    <nav>
+        <a href="{% url 'admin_dashboard' %}" class="nav-brand">
+            <div class="nav-logo">
+                <svg width="20" height="20" viewBox="0 0 44 44" fill="none">
+                    <ellipse cx="22" cy="32" rx="13" ry="4.5" fill="rgba(201,168,76,0.25)" stroke="#C9A84C"
+                        stroke-width="1.5" />
+                    <ellipse cx="22" cy="27" rx="13" ry="4.5" fill="rgba(201,168,76,0.2)" stroke="#C9A84C"
+                        stroke-width="1.5" />
+                    <ellipse cx="22" cy="22" rx="13" ry="4.5" fill="rgba(201,168,76,0.3)" stroke="#C9A84C"
+                        stroke-width="1.5" />
+                    <line x1="22" y1="19.2" x2="22" y2="24.8" stroke="#E8C97A" stroke-width="1.8"
+                        stroke-linecap="round" />
+                    <line x1="19.2" y1="22" x2="24.8" y2="22" stroke="#E8C97A" stroke-width="1.8"
+                        stroke-linecap="round" />
+                </svg>
+            </div>
+            <span class="nav-title">Omo<span>Jesu</span> Savings</span>
+        </a>
+        <div class="nav-actions">
+            <a href="{% url 'member_search' %}" class="btn">Members</a>
+            <a href="{% url 'add_member' %}" class="btn btn-green">+ Add Member</a>
+            <a href="{% url 'add_contribution' %}" class="btn btn-gold">+ Contribution</a>
+            <a href="{% url 'add_loan' %}" class="btn">+ Loan</a>
+            <a href="{% url 'add_repayment' %}" class="btn">+ Repayment</a>
+            <a href="{% url 'all_members_statement' %}" class="btn">
+                📄 All Members Report
+            </a>
+            <a href="{% url 'weekly_contributions' %}" class="btn" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9);border-color:transparent;color:#fff;">
+    📅 Weekly Review
+</a>
+            <form method="POST" action="{% url 'logout' %}" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="btn">Logout</button>
+            </form>
         </div>
-        <span class="nav-title">Omo<span>Jesu</span> Savings</span>
-    </a>
-    <div class="nav-actions">
-        <a href="{% url 'member_search' %}" class="btn">Members</a>
-        <a href="{% url 'add_member' %}"    class="btn btn-green">+ Add Member</a>
-        <a href="{% url 'add_contribution' %}" class="btn btn-gold">+ Contribution</a>
-        <a href="{% url 'add_loan' %}"      class="btn">+ Loan</a>
-        <a href="{% url 'add_repayment' %}" class="btn">+ Repayment</a>
-        <form method="POST" action="{% url 'logout' %}" class="logout-form">
-            {% csrf_token %}
-            <button type="submit" class="btn">Logout</button>
-        </form>
-    </div>
-</nav>
+    </nav>
 
-<main>
-    <h1 class="page-title">Admin Dashboard</h1>
-    <p class="page-sub">OmoJesu Savings · Church-wide financial overview</p>
+    <main>
+        <h1 class="page-title">Admin Dashboard</h1>
+        <p class="page-sub">OmoJesu Savings · Church-wide financial overview</p>
 
-    <!-- KPI CARDS -->
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <p class="kpi-label">Total Members</p>
-            <p class="kpi-value gold">{{ stats.total_members }}</p>
-        </div>
-        <!-- <div class="kpi-card">
+        <!-- KPI CARDS -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <p class="kpi-label">Total Members</p>
+                <p class="kpi-value gold">{{ stats.total_members }}</p>
+            </div>
+            <!-- <div class="kpi-card">
             <p class="kpi-label">Registered (App)</p>
             <p class="kpi-value blue">{{ stats.registered_members }}</p>
         </div> -->
-        <div class="kpi-card" style="border-color:rgba(16,185,129,0.2);">
-            <p class="kpi-label">Total Savings</p>
-            <p class="kpi-value green">{{ stats.total_savings|naira }}</p>
-        </div>
-        <div class="kpi-card">
-            <p class="kpi-label">Loans Issued</p>
-            <p class="kpi-value blue">{{ stats.total_loans|naira }}</p>
-        </div>
-        <div class="kpi-card">
-            <p class="kpi-label">Repayments</p>
-            <p class="kpi-value gold">{{ stats.total_repayments|naira }}</p>
-        </div>
-        <div class="kpi-card" style="border-color:rgba(239,68,68,0.2);">
-            <p class="kpi-label">Outstanding</p>
-            <p class="kpi-value red">{{ stats.outstanding_loans|naira }}</p>
-        </div>
-    </div>
+            <div class="kpi-card" style="border-color:rgba(16,185,129,0.2);">
+                <p class="kpi-label">Total Savings</p>
+                <p class="kpi-value green">{{ stats.total_savings|naira }}</p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-label">Loans Issued</p>
+                <p class="kpi-value blue">{{ stats.total_loans|naira }}</p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-label">Repayments</p>
+                <p class="kpi-value gold">{{ stats.total_repayments|naira }}</p>
+            </div>
+            <div class="kpi-card" style="border-color:rgba(239,68,68,0.2);">
+                <p class="kpi-label">Outstanding</p>
+                <p class="kpi-value red">{{ stats.outstanding_loans|naira }}</p>
+            </div>
+            <!-- NEW: Total Interest Accrued -->
+            <div class="kpi-card" style="border-color:rgba(251,191,36,0.2); background:rgba(251,191,36,0.05);">
+                <p class="kpi-label">Total Interest Accrued</p>
+                <p class="kpi-value orange">{{ stats.total_interest_all|naira }}</p>
+                <p style="font-size:0.6rem;color:var(--muted);margin-top:0.2rem;">Across all members</p>
+            </div>
 
-    <!-- CHART + TOP SAVERS -->
-    <div class="two-col">
-        <div class="card">
-            <p class="card-title">Monthly Savings Trend (Last 6 Months)</p>
-            <div class="chart-wrap">
-                <canvas id="savingsChart"></canvas>
+            <!-- NEW: Total Repayments -->
+            <div class="kpi-card" style="border-color:rgba(196,181,253,0.2); background:rgba(196,181,253,0.05);">
+                <p class="kpi-label">Total Repayments</p>
+                <p class="kpi-value blue">{{ stats.total_repayments_all|naira }}</p>
+                <p style="font-size:0.6rem;color:var(--muted);margin-top:0.2rem;">All members combined</p>
             </div>
         </div>
-        <div class="card">
-            <p class="card-title">Top Savers</p>
-            {% for member, amount in stats.top_savers %}
-            <div class="leader-item">
-                <div class="leader-rank {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-n{% endif %}">{{ forloop.counter }}</div>
-                <div class="leader-avatar">{{ member.full_name|first|upper }}</div>
-                <span class="leader-name">{{ member.full_name }}</span>
-                <span class="leader-amount green">{{ amount|naira }}</span>
-            </div>
-            {% empty %}
-            <p style="font-size:0.82rem;color:var(--muted);">No savings recorded yet.</p>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- OUTSTANDING DEBTORS -->
-    <div class="card" style="margin-top:1rem;">
-        <p class="card-title">Members with Outstanding Loans</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.75rem;margin-top:0.5rem;">
-            {% for member, amount in stats.debtors %}
-            <a href="{% url 'member_detail' member.id %}" style="display:flex;align-items:center;gap:0.85rem;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:14px;padding:0.85rem 1rem;text-decoration:none;transition:background 0.2s;">
-                <div class="leader-avatar">{{ member.full_name|first|upper }}</div>
-                <div style="flex:1;min-width:0;">
-                    <p style="font-size:0.88rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ member.full_name }}</p>
-                    <p style="font-size:0.72rem;color:var(--muted);">{{ member.card_number }}</p>
+        <!-- CHART + TOP SAVERS -->
+        <div class="two-col">
+            <div class="card">
+                <p class="card-title">Monthly Savings Trend (Last 6 Months)</p>
+                <div class="chart-wrap">
+                    <canvas id="savingsChart"></canvas>
                 </div>
-                <span style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:#fca5a5;white-space:nowrap;">{{ amount|naira }}</span>
-            </a>
-            {% empty %}
-            <p style="font-size:0.82rem;color:var(--muted);">No outstanding loans.</p>
-            {% endfor %}
+            </div>
+            <div class="card">
+                <p class="card-title">Top Savers</p>
+                {% for member, amount in stats.top_savers %}
+                <div class="leader-item">
+                    <div
+                        class="leader-rank {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-n{% endif %}">
+                        {{ forloop.counter }}</div>
+                    <div class="leader-avatar">{{ member.full_name|first|upper }}</div>
+                    <span class="leader-name">{{ member.full_name }}</span>
+                    <span class="leader-amount green">{{ amount|naira }}</span>
+                </div>
+                {% empty %}
+                <p style="font-size:0.82rem;color:var(--muted);">No savings recorded yet.</p>
+                {% endfor %}
+            </div>
         </div>
-    </div>
-</main>
 
-<script>
-new Chart(document.getElementById('savingsChart'), {
-    type: 'line',
-    data: {
-        labels: {{ chart_labels|safe }},
-        datasets: [{
-            label: 'Total Savings (₦)',
-            data: {{ chart_data|safe }},
+        <!-- OUTSTANDING DEBTORS -->
+        <div class="card" style="margin-top:1rem;">
+            <p class="card-title">Members with Outstanding Loans</p>
+            <div
+                style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.75rem;margin-top:0.5rem;">
+                {% for member, amount in stats.debtors %}
+                <a href="{% url 'member_detail' member.id %}"
+                    style="display:flex;align-items:center;gap:0.85rem;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:14px;padding:0.85rem 1rem;text-decoration:none;transition:background 0.2s;">
+                    <div class="leader-avatar">{{ member.full_name|first|upper }}</div>
+                    <div style="flex:1;min-width:0;">
+                        <p
+                            style="font-size:0.88rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            {{ member.full_name }}</p>
+                        <p style="font-size:0.72rem;color:var(--muted);">{{ member.card_number }}</p>
+                    </div>
+                    <span
+                        style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:#fca5a5;white-space:nowrap;">{{
+                        amount|naira }}</span>
+                </a>
+                {% empty %}
+                <p style="font-size:0.82rem;color:var(--muted);">No outstanding loans.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+        new Chart(document.getElementById('savingsChart'), {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels| safe }},
+            datasets: [{
+                label: 'Total Savings (₦)',
+                data: {{ chart_data| safe }},
             borderColor: '#10b981',
             backgroundColor: 'rgba(16,185,129,0.12)',
             fill: true, tension: 0.4,
             pointBackgroundColor: '#10b981', pointRadius: 5,
         }]
     },
-    options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#8A9490', font: { family: 'DM Sans' } } } },
-        scales: {
-            x: { ticks: { color: '#8A9490' }, grid: { color: 'rgba(255,255,255,0.04)' } },
-            y: { ticks: { color: '#8A9490' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+            options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#8A9490', font: { family: 'DM Sans' } } } },
+            scales: {
+                x: { ticks: { color: '#8A9490' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                y: { ticks: { color: '#8A9490' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+            }
         }
-    }
 });
-</script>
+    </script>
 </body>
+
 </html>

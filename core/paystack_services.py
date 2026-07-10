@@ -16,12 +16,12 @@ def initialize_transaction(email, amount_naira, member_id, callback_url):
     FIX: Added User-Agent header — Cloudflare was blocking urllib with a 403 (error 1010).
     """
     amount_kobo = int(float(amount_naira) * 100)
-    reference   = generate_reference()
+    reference = generate_reference()
 
     payload = json.dumps({
-        "email":        email,
-        "amount":       amount_kobo,
-        "reference":    reference,
+        "email": email,
+        "amount": amount_kobo,
+        "reference": reference,
         "callback_url": callback_url,
         "metadata": {
             "member_id": member_id,
@@ -33,9 +33,9 @@ def initialize_transaction(email, amount_naira, member_id, callback_url):
         data=payload,
         headers={
             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
-            "Content-Type":  "application/json",
-            "User-Agent":    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept":        "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json",
         }
     )
 
@@ -45,9 +45,9 @@ def initialize_transaction(email, amount_naira, member_id, callback_url):
 
         if data.get("status"):
             return {
-                "status":            True,
+                "status": True,
                 "authorization_url": data["data"]["authorization_url"],
-                "reference":         data["data"]["reference"],
+                "reference": data["data"]["reference"],
             }
         return {"status": False, "message": data.get("message", "Unknown error")}
 
@@ -68,8 +68,8 @@ def verify_transaction(reference):
         f"https://api.paystack.co/transaction/verify/{reference}",
         headers={
             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
-            "User-Agent":    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept":        "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json",
         }
     )
 
@@ -79,10 +79,10 @@ def verify_transaction(reference):
 
         if data.get("status") and data.get("data", {}).get("status") == "success":
             return {
-                "status":       True,
+                "status": True,
                 "amount_naira": data["data"]["amount"] / 100,
-                "email":        data["data"]["customer"]["email"],
-                "member_id":    data["data"].get("metadata", {}).get("member_id"),
+                "email": data["data"]["customer"]["email"],
+                "member_id": data["data"].get("metadata", {}).get("member_id"),
             }
         return {"status": False, "message": data.get("message", "Transaction not successful")}
 

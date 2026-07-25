@@ -23,6 +23,7 @@ if _railway_domain:
 CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
 
 # ── HTTPS SECURITY HEADERS ────────────────────────────────────────────────────
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG

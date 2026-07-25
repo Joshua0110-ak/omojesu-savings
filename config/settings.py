@@ -113,8 +113,8 @@ WITHDRAWAL_DAILY_LIMIT = 1000000
 WITHDRAWAL_SINGLE_LIMIT = 500000
 
 # ── PAYSTACK ──────────────────────────────────────────────────────────────────
-PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', 'pk_test_xxxxxxxxxxxxxxxxxx')
-PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', 'sk_test_xxxxxxxxxxxxxxxxxx')
+PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', 'pk_test_e0c99a0d8ccd963ca4308e3dc2f1b222ef39edc2')
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', 'sk_test_0edce4fde153aaaf8d6b4cd9b3ddb2a366df8b64')
 
 # ── BASE URL ──────────────────────────────────────────────────────────────────
 BASE_URL = os.environ.get('BASE_URL', 'https://omojesu-savings.com')

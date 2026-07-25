@@ -10,7 +10,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ── SECURITY ──────────────────────────────────────────────────────────────────
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dev-key-change-me')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '::1', 'omojesu-savings.onrender.com']
+ALLOWED_HOSTS = [
+    '127.0.0.1', 'localhost', '::1',
+    'omojesu-savings.onrender.com',
+    '.up.railway.app',  # covers your Railway-generated domain
+]
+
+_railway_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if _railway_domain:
+    ALLOWED_HOSTS.append(_railway_domain)
+
+CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
 
 # ── HTTPS SECURITY HEADERS ────────────────────────────────────────────────────
 SECURE_SSL_REDIRECT = not DEBUG
@@ -39,6 +49,7 @@ INSTALLED_APPS = [
 # ── MIDDLEWARE ────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -94,6 +105,11 @@ USE_TZ = True
 # ── STATIC & MEDIA FILES ─────────────────────────────────────────────────────
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

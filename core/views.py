@@ -226,6 +226,11 @@ def member_detail(request, member_id):
     except Member.DoesNotExist:
         pass
 
+    # A finance admin viewing their OWN member page sees it like a regular
+    # member (no add-contribution/give-loan buttons); they only get admin
+    # controls when viewing someone else's page.
+    viewer_is_admin = is_finance_admin(request.user) and not viewer_is_member
+
     return render(request, "member_detail.html", {
         "member": member,
         "summary": summary,
@@ -234,11 +239,8 @@ def member_detail(request, member_id):
         "loans": loans,
         "chart_labels": json.dumps(chart_labels),
         "chart_data": json.dumps(chart_data),
-        "viewer_is_admin": is_finance_admin(request.user),
+        "viewer_is_admin": viewer_is_admin,
         "viewer_is_member": viewer_is_member,
-        "last_payment": contributions.first(),
-        "paystack_public_key": settings.PAYSTACK_PUBLIC_KEY,
-    })
 
 
 # ── EDIT PROFILE ──────────────────────────────────────────────────────────────

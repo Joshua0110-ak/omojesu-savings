@@ -209,6 +209,7 @@ def member_detail(request, member_id):
             return HttpResponseForbidden("You can only view your own dashboard.")
 
     summary = member_summary(member)
+    
     # Only show verified contributions
     contributions = Contribution.objects.filter(
         member=member
@@ -222,9 +223,11 @@ def member_detail(request, member_id):
 
     viewer_is_member = False
     try:
-        viewer_is_member = (request.user.member == member)
+        viewer_is_member = (request.user.member == member)  # ← FIXED: 'member' not 'viewer'
     except Member.DoesNotExist:
         pass
+
+    viewer_is_admin = is_finance_admin(request.user)
 
     return render(request, "member_detail.html", {
         "member": member,
@@ -234,12 +237,10 @@ def member_detail(request, member_id):
         "loans": loans,
         "chart_labels": json.dumps(chart_labels),
         "chart_data": json.dumps(chart_data),
-        "viewer_is_admin": is_finance_admin(request.user),
+        "viewer_is_admin": viewer_is_admin,
         "viewer_is_member": viewer_is_member,
-        "last_payment": contributions.first(),
         "paystack_public_key": settings.PAYSTACK_PUBLIC_KEY,
     })
-
 
 # ── EDIT PROFILE ──────────────────────────────────────────────────────────────
 

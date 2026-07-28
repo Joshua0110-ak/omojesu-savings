@@ -364,6 +364,9 @@
             <span class="nav-title">Omo<span>Jesu</span> Savings</span>
         </a>
         <div class="nav-actions">
+            {% if request.user.member %}
+            <a href="{% url 'member_detail' request.user.member.id %}" class="btn">👤 My Profile</a>
+            {% endif %}
             <a href="{% url 'member_search' %}" class="btn">Members</a>
             <a href="{% url 'add_member' %}" class="btn btn-green">+ Add Member</a>
             <a href="{% url 'add_contribution' %}" class="btn btn-gold">+ Contribution</a>

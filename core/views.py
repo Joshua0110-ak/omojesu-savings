@@ -241,7 +241,7 @@ def member_detail(request, member_id):
         "chart_data": json.dumps(chart_data),
         "viewer_is_admin": viewer_is_admin,
         "viewer_is_member": viewer_is_member,
-
+        })
 
 # ── EDIT PROFILE ──────────────────────────────────────────────────────────────
 

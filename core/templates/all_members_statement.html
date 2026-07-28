@@ -264,11 +264,11 @@
                <!-- TOTALS ROW -->
                 <tr class="total-row">
                     <td colspan="3" style="text-align:right; font-size:1rem;">TOTALS</td>
-                    <td class="text-right" style="color: #6ee7b7; font-size:1rem;">{{ total_savings_all|naira }}</td>
-                    <td class="text-right" style="color: #93c5fd; font-size:1rem;">{{ total_loans_all|naira }}</td>
-                    <td class="text-right" style="color: #c4b5fd; font-size:1rem;">{{ total_repayments_all|naira }}</td>
-                    <td class="text-right" style="color: #fca5a5; font-size:1rem;">{{ total_outstanding_all|naira }}</td>
-                    <td class="text-right" style="color:var(--gold-lt); font-size:1rem;">{{ total_savings_all|subtract:total_outstanding_all|naira }}</td>
+                    <td class="text-center" style="color: #6ee7b7; font-size:1rem;">{{ total_savings_all|naira }}</td>
+                    <td class="text-center" style="color: #93c5fd; font-size:1rem;">{{ total_loans_all|naira }}</td>
+                    <td class="text-center" style="color: #c4b5fd; font-size:1rem;">{{ total_repayments_all|naira }}</td>
+                    <td class="text-center" style="color: #fca5a5; font-size:1rem;">{{ total_outstanding_all|naira }}</td>
+                    <td class="text-center" style="color:var(--gold-lt); font-size:1rem;">{{ total_savings_all|subtract:total_outstanding_all|naira }}</td>
                     <td></td>
                 </tr>
             </tfoot>

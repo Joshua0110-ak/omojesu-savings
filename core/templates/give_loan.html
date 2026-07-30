@@ -181,7 +181,7 @@
         {% endfor %}
         {% endif %}
 
-        <form method="POST" id="addLoanForm" onsubmit="event.preventDefault(); showConfirm('Are you sure you want to give this loan?', null, 'addLoanForm');">
+        <form method="POST" id="addLoanForm" onsubmit="event.preventDefault(); showConfirm('Submit this loan request for approval?', null, 'addLoanForm');">
             {% csrf_token %}
             <div class="form-group">
                 <label class="form-label">Member</label>
@@ -191,14 +191,13 @@
                 <label class="form-label">Loan Amount (₦)</label>
                 {{ form.amount }}
             </div>
-            <div class="form-group">
-                <label class="form-label">Due Date</label>
-                {{ form.due_date }}
-            </div>
+            <p style="font-size:0.78rem;color:var(--muted);margin:-0.5rem 0 1rem;">
+                📅 Due date is automatically set to the last Sunday of October — no need to enter it.
+            </p>
             {% if form.errors %}
             <div class="error-msg">Please correct the errors above.</div>
             {% endif %}
-            <button type="submit" class="btn">Record Loan ✓</button>
+            <button type="submit" class="btn">Submit for Approval 📨</button>
         </form>
     </div>
 

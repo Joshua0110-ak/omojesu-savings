@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Approvals – OmoJesu Savings</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'core/images/site.webmanifest' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #C9A84C; --gold-lt: #E8C97A; --green: #1A6B4A; --green-lt: #22885E;
+            --dark: #0A0E0C; --card: #111812; --border: rgba(201,168,76,0.18);
+            --border2: rgba(255,255,255,0.07); --text: #F0EDE6; --muted: #8A9490;
+            --red: #fca5a5;
+        }
+        body {
+            min-height: 100vh; background-color: var(--dark);
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26,107,74,0.35) 0%, transparent 65%),
+                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(201,168,76,0.12) 0%, transparent 60%);
+            font-family: 'DM Sans', sans-serif; color: var(--text);
+            padding: 2rem 1.5rem 4rem;
+        }
+        .wrapper { max-width: 780px; margin: 0 auto; }
+        .back-link { color: var(--muted); text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { color: var(--text); }
+        h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.9rem; margin: 0.75rem 0 0.25rem; }
+        .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.75rem; }
+        .msg { padding: 0.85rem 1.1rem; border-radius: 12px; margin-bottom: 1rem; font-size: 0.85rem; }
+        .msg-success { background: rgba(34,136,94,0.15); border: 1px solid rgba(34,136,94,0.35); color: #6ee7b7; }
+        .msg-error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+        .loan-card {
+            background: var(--card); border: 1px solid var(--border2); border-radius: 18px;
+            padding: 1.25rem 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 1.25rem;
+            flex-wrap: wrap;
+        }
+        .loan-info { flex: 1; min-width: 220px; }
+        .loan-member { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; }
+        .loan-meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; line-height: 1.6; }
+        .loan-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700; color: var(--gold-lt); }
+        .actions { display: flex; gap: 0.6rem; }
+        .btn {
+            font-size: 0.8rem; font-weight: 500; padding: 0.55rem 1.1rem; border-radius: 10px;
+            border: 1px solid var(--border2); cursor: pointer; text-decoration: none;
+        }
+        .btn-approve { background: linear-gradient(135deg, var(--green-lt), var(--green)); border-color: transparent; color: #fff; }
+        .btn-reject { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: var(--red); }
+        .self-note { font-size: 0.78rem; color: var(--muted); font-style: italic; }
+        .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Admin Dashboard</a>
+        <h1>Loan Approvals</h1>
+        <p class="sub">Every new loan request needs a different finance admin to approve or reject it.</p>
+
+        {% for message in messages %}
+        <div class="msg {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ message }}</div>
+        {% endfor %}
+
+        {% for loan in pending_loans %}
+        <div class="loan-card">
+            <div class="loan-info">
+                <p class="loan-member">{{ loan.member.full_name }}</p>
+                <p class="loan-meta">
+                    Card: {{ loan.member.card_number }} · Interest: {{ loan.interest_rate }}%
+                    · Due: {{ loan.due_date|date:"M d, Y" }}<br>
+                    Requested by {{ loan.recorded_by.username|default:"—" }} on {{ loan.date_given|date:"M d, Y · H:i" }}
+                </p>
+            </div>
+            <div class="loan-amount">₦{{ loan.amount|floatformat:2 }}</div>
+            {% if loan.recorded_by_id == request.user.id %}
+                <p class="self-note">You requested this — another admin must review it.</p>
+            {% else %}
+            <div class="actions">
+                <form method="POST" action="{% url 'approve_loan' loan.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-approve" onclick="return confirm('Approve this loan?');">Approve ✓</button>
+                </form>
+                <form method="POST" action="{% url 'reject_loan' loan.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-reject" onclick="return confirm('Reject this loan?');">Reject ✕</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="empty">No loans are waiting for approval right now. 🎉</div>
+        {% endfor %}
+    </div>
+</body>
+</html>

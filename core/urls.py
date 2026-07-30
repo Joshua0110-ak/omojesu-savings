@@ -13,6 +13,9 @@ from .views import (
     add_contribution,
     add_loan,
     add_repayment,
+    loan_approvals,
+    approve_loan,
+    reject_loan,
     add_member,
     password_change_done_redirect,
     member_full_statement,
@@ -48,6 +51,9 @@ urlpatterns = [
     # ── TRANSACTIONS ──────────────────────────────────────────────────────────
     path("add-contribution/", add_contribution, name="add_contribution"),
     path("give-loan/",        add_loan,         name="add_loan"),
+    path("loan-approvals/",   loan_approvals,   name="loan_approvals"),
+    path("loan-approvals/<int:loan_id>/approve/", approve_loan, name="approve_loan"),
+    path("loan-approvals/<int:loan_id>/reject/",  reject_loan,  name="reject_loan"),
     path("add-repayment/",    add_repayment,    name="add_repayment"),
     path("add-member/",       add_member,       name="add_member"),
 

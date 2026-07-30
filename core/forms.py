@@ -58,27 +58,19 @@ class LoanForm(forms.ModelForm):
 
     class Meta:
         model  = Loan
-        fields = ["member", "amount", "due_date"]
+        fields = ["member", "amount"]
         widgets = {
             "member":   forms.Select(attrs={"class": _SELECT}),
             "amount":   forms.NumberInput(attrs={
                 "class": _INPUT, "placeholder": "Loan amount (₦)",
                 "min": "0.01", "step": "0.01"
             }),
-            "due_date": forms.DateInput(attrs={"class": _INPUT, "type": "date"}),
         }
 
     def clean_amount(self):
         v = self.cleaned_data["amount"]
         if v <= 0:
             raise ValidationError("Amount must be greater than zero.")
-        return v
-
-    def clean_due_date(self):
-        from django.utils import timezone
-        v = self.cleaned_data["due_date"]
-        if v <= timezone.now().date():
-            raise ValidationError("Due date must be in the future.")
         return v
 
 
@@ -93,7 +85,7 @@ class LoanRepaymentForm(forms.ModelForm):
                 # Only show unpaid loans that belong to other members (for admins)
                 self.fields['loan'].queryset = Loan.objects.exclude(
                     member__user=user
-                ).filter(is_paid=False)
+                ).filter(is_paid=False, status="Approved")
             except Exception:
                 pass
 

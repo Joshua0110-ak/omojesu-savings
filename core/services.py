@@ -14,13 +14,13 @@ def total_savings(member):
     return result or Decimal('0')
 
 def total_loans(member):
-    """Get total loans for a member."""
-    result = member.loans.aggregate(t=Sum('amount'))['t']
+    """Get total (approved) loans for a member."""
+    result = member.loans.filter(status="Approved").aggregate(t=Sum('amount'))['t']
     return result or Decimal('0')
 
 def total_loan_interest(member):
-    """Calculate total interest on all loans for a member."""
-    loans = Loan.objects.filter(member=member)
+    """Calculate total interest on all approved loans for a member."""
+    loans = Loan.objects.filter(member=member, status="Approved")
     return sum(l.amount * l.interest_rate / 100 for l in loans) or Decimal('0')
 
 def total_repayments(member):
@@ -31,11 +31,12 @@ def total_repayments(member):
     return result or Decimal('0')
 
 def outstanding_loan(member):
-    """Calculate outstanding loan balance for a member."""
+    """Calculate outstanding loan balance for a member (approved loans only)."""
     total_due = Decimal("0")
     loans = Loan.objects.filter(
         member=member,
-        is_paid=False
+        is_paid=False,
+        status="Approved",
     )
     for loan in loans:
         total_due += loan.total_with_interest()
@@ -92,7 +93,7 @@ def org_summary():
         payment_verified=True
     ).aggregate(t=Sum('amount'))['t'] or Decimal('0')
     
-    total_loans_all = Loan.objects.aggregate(t=Sum('amount'))['t'] or Decimal('0')
+    total_loans_all = Loan.objects.filter(status="Approved").aggregate(t=Sum('amount'))['t'] or Decimal('0')
     total_repay_all = LoanRepayment.objects.aggregate(t=Sum('amount'))['t'] or Decimal('0')
     outstanding_all = max(total_loans_all - total_repay_all, Decimal('0'))
 
@@ -168,9 +169,9 @@ def payment_summary():
 # ── TOTAL INTEREST ACCRUED (All Members) ─────────────────────────────────────
 
 def total_interest_all():
-    """Calculate total interest accrued across ALL members."""
+    """Calculate total interest accrued across ALL approved loans."""
     from decimal import Decimal
-    loans = Loan.objects.all()
+    loans = Loan.objects.filter(status="Approved")
     total = Decimal('0')
     for loan in loans:
         total += loan.amount * loan.interest_rate / 100
@@ -185,10 +186,16 @@ def total_repayments_all():
     return result or Decimal('0')
 
 def has_pending_loan(member):
-    """Check if a member has any pending (unpaid) loans."""
-    return Loan.objects.filter(member=member, is_paid=False).exists()
+    """Check if a member has any unresolved loan (Pending or Approved-and-unpaid).
+    A Rejected loan doesn't count — it shouldn't block a fresh request."""
+    return Loan.objects.filter(member=member, is_paid=False).exclude(status="Rejected").exists()
 
 
 def get_pending_loans(member):
-    """Get all pending loans for a member."""
-    return Loan.objects.filter(member=member, is_paid=False)    
+    """Get all unresolved loans for a member (excluding Rejected)."""
+    return Loan.objects.filter(member=member, is_paid=False).exclude(status="Rejected")
+
+
+def pending_approvals_count():
+    """Number of loans awaiting a decision — used for the admin nav badge."""
+    return Loan.objects.filter(status="Pending").count()    

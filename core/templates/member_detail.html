@@ -898,7 +898,11 @@
                                 <td style="color:var(--muted);">{{ loan.due_date }}</td>
                                 <td>{{ loan.balance_remaining|naira }}</td>
                                 <td>
-                                    {% if loan.is_paid %}
+                                    {% if loan.status == "Pending" %}
+                                    <span class="badge" style="background:rgba(251,191,36,0.15);color:#fdba74;">⏳ Pending</span>
+                                    {% elif loan.status == "Rejected" %}
+                                    <span class="badge badge-red">Rejected</span>
+                                    {% elif loan.is_paid %}
                                     <span class="badge badge-green">Paid</span>
                                     {% else %}
                                     <span class="badge badge-red">Unpaid</span>

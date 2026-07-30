@@ -23,13 +23,14 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from io import BytesIO
 
-from .models import Member, Contribution, Loan, LoanRepayment, PaymentTransaction
+from .models import Member, Contribution, Loan, LoanRepayment, PaymentTransaction, default_loan_due_date
 from .services import (
     member_summary, 
     contributions_by_month, 
     org_summary,
     total_interest_all,      
-    total_repayments_all,    
+    total_repayments_all,
+    pending_approvals_count,
 )
 from .forms import (
     ContributionForm, LoanForm, LoanRepaymentForm,
@@ -189,6 +190,7 @@ def admin_dashboard(request):
         "stats": stats,
         "chart_labels": json.dumps(stats["chart_labels"]),
         "chart_data": json.dumps(stats["chart_data"]),
+        "pending_approvals_count": pending_approvals_count(),
     })
 
 
@@ -209,7 +211,6 @@ def member_detail(request, member_id):
             return HttpResponseForbidden("You can only view your own dashboard.")
 
     summary = member_summary(member)
-    
     # Only show verified contributions
     contributions = Contribution.objects.filter(
         member=member
@@ -223,10 +224,13 @@ def member_detail(request, member_id):
 
     viewer_is_member = False
     try:
-        viewer_is_member = (request.user.member == member)  # ← FIXED: 'member' not 'viewer'
+        viewer_is_member = (request.user.member == member)
     except Member.DoesNotExist:
         pass
 
+    # A finance admin viewing their OWN member page sees it like a regular
+    # member (no add-contribution/give-loan buttons); they only get admin
+    # controls when viewing someone else's page.
     viewer_is_admin = is_finance_admin(request.user) and not viewer_is_member
 
     return render(request, "member_detail.html", {
@@ -239,8 +243,10 @@ def member_detail(request, member_id):
         "chart_data": json.dumps(chart_data),
         "viewer_is_admin": viewer_is_admin,
         "viewer_is_member": viewer_is_member,
+        "last_payment": contributions.first(),
         "paystack_public_key": settings.PAYSTACK_PUBLIC_KEY,
     })
+
 
 # ── EDIT PROFILE ──────────────────────────────────────────────────────────────
 
@@ -318,32 +324,93 @@ def add_contribution(request):
 @login_required
 @finance_admin_required
 def add_loan(request):
-    """Add loan - admin only."""
+    """Request a loan for a member - admin only. Goes to Pending status
+    and needs a DIFFERENT finance admin to approve/reject it."""
     if request.method == "POST":
         form = LoanForm(request.POST, user=request.user)
         if form.is_valid():
             member = form.cleaned_data.get('member')
             
-            # ── CHECK: Does member have pending loan? ──
-            pending_loan = Loan.objects.filter(member=member, is_paid=False).exists()
+            # ── CHECK: Does member have an unresolved loan? ──
+            # (Pending or Approved-and-unpaid; Rejected doesn't block.)
+            pending_loan = Loan.objects.filter(
+                member=member, is_paid=False
+            ).exclude(status="Rejected").exists()
             if pending_loan:
                 messages.error(
                     request, 
-                    f"❌ {member.full_name} has a pending loan! "
-                    "They cannot take another loan until the current one is fully repaid."
+                    f"❌ {member.full_name} already has an unresolved loan! "
+                    "They cannot request another loan until it's repaid or rejected."
                 )
                 return redirect("add_loan")
             
             loan = form.save(commit=False)
             loan.recorded_by = request.user
             loan.interest_rate = 7 if loan.member.is_finance_admin else 10
+            loan.due_date = default_loan_due_date()
+            loan.status = "Pending"
             loan.save()
-            messages.success(request, f"✅ Loan of ₦{loan.amount:,.2f} recorded for {loan.member.full_name}.")
+            messages.success(
+                request,
+                f"📨 Loan request of ₦{loan.amount:,.2f} for {loan.member.full_name} "
+                "has been submitted and is awaiting approval from another finance admin."
+            )
             return redirect("member_detail", member_id=loan.member.id)
     else:
         form = LoanForm(user=request.user)
     
     return render(request, "give_loan.html", {"form": form})
+
+
+# ── LOAN APPROVALS ────────────────────────────────────────────────────────────
+
+@login_required
+@finance_admin_required
+def loan_approvals(request):
+    """List all loans awaiting approval - finance admins only."""
+    pending_loans = Loan.objects.filter(status="Pending").select_related(
+        "member", "recorded_by"
+    ).order_by("date_given")
+    return render(request, "loan_approvals.html", {
+        "pending_loans": pending_loans,
+    })
+
+
+@login_required
+@finance_admin_required
+def approve_loan(request, loan_id):
+    """Approve a pending loan - cannot approve your own request."""
+    loan = get_object_or_404(Loan, id=loan_id, status="Pending")
+
+    if loan.recorded_by_id == request.user.id:
+        messages.error(request, "You can't approve a loan you requested yourself. Ask another finance admin to review it.")
+        return redirect("loan_approvals")
+
+    if request.method == "POST":
+        loan.status = "Approved"
+        loan.approved_by = request.user
+        loan.save()
+        messages.success(request, f"✅ Loan of ₦{loan.amount:,.2f} for {loan.member.full_name} approved.")
+    return redirect("loan_approvals")
+
+
+@login_required
+@finance_admin_required
+def reject_loan(request, loan_id):
+    """Reject a pending loan - cannot reject your own request."""
+    loan = get_object_or_404(Loan, id=loan_id, status="Pending")
+
+    if loan.recorded_by_id == request.user.id:
+        messages.error(request, "You can't reject a loan you requested yourself. Ask another finance admin to review it.")
+        return redirect("loan_approvals")
+
+    if request.method == "POST":
+        loan.status = "Rejected"
+        loan.approved_by = request.user
+        loan.is_paid = True  # so it never shows as "outstanding" or blocks new requests
+        loan.save()
+        messages.success(request, f"🚫 Loan of ₦{loan.amount:,.2f} for {loan.member.full_name} rejected.")
+    return redirect("loan_approvals")
 
 
 # ── ADD REPAYMENT ─────────────────────────────────────────────────────────────

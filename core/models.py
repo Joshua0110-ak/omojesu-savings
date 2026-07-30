@@ -3,6 +3,26 @@ from django.db.models import Sum
 from django.contrib.auth.models import User
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from datetime import date, timedelta
+
+
+def last_sunday_of_october(year):
+    """Return the date of the last Sunday in October for the given year."""
+    d = date(year, 10, 31)
+    # weekday(): Monday=0 ... Sunday=6
+    offset = (d.weekday() - 6) % 7
+    return d - timedelta(days=offset)
+
+
+def default_loan_due_date():
+    """All loans are due on the last Sunday of October — this year's if it
+    hasn't passed yet, otherwise next year's."""
+    from django.utils import timezone
+    today = timezone.now().date()
+    due = last_sunday_of_october(today.year)
+    if due < today:
+        due = last_sunday_of_october(today.year + 1)
+    return due
 
 
 class Member(models.Model):

@@ -227,7 +227,7 @@ def member_detail(request, member_id):
     except Member.DoesNotExist:
         pass
 
-    viewer_is_admin = is_finance_admin(request.user)
+    viewer_is_admin = is_finance_admin(request.user) and not viewer_is_member
 
     return render(request, "member_detail.html", {
         "member": member,

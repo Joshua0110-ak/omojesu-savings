@@ -669,6 +669,9 @@
             <a href="{% url 'initialize_payment' member.id %}" class="btn btn-paystack">
                 💳 Make Contribution
             </a>
+            <a href="{% url 'submit_contribution_proof' member.id %}" class="btn btn-gold">
+                📤 Submit Bank Transfer Proof
+            </a>
             <a href="{% url 'statement_pdf' member.id %}" class="btn btn-gold">⬇ PDF</a>
             <a href="{% url 'edit_profile' member.id %}" class="btn btn-gold">✏️ Edit</a>
             <a href="{% url 'change_password' %}" class="btn">🔒 Password</a>
@@ -818,18 +821,25 @@
                             Deposit
                             {% if c.payment_method == "Paystack" %}
                             <span style="color:#6ee7b7;font-size:0.7rem;margin-left:6px;">(Paystack)</span>
+                            {% elif c.payment_method == "Self-Reported" %}
+                            <span style="color:#fdba74;font-size:0.7rem;margin-left:6px;">(Bank Transfer)</span>
                             {% endif %}
                         </p>
 
                         <p class="tx-date">
                             {{ c.date|date:"M d, Y · H:i" }}
-                            {% if c.recorded_by and c.payment_method != "Paystack" %} · by {{ c.recorded_by.username }}{% endif %}
+                            {% if c.recorded_by and c.payment_method != "Paystack" and c.payment_method != "Self-Reported" %} · by {{ c.recorded_by.username }}{% endif %}
                         </p>
 
                         {% if c.payment_method == "Paystack" %}
                         <p
                             style="font-size:0.7rem;margin-top:4px;color:{% if c.payment_verified %}#6ee7b7{% else %}#fca5a5{% endif %};">
                             {% if c.payment_verified %}✓ Verified{% else %}✗ Unverified{% endif %}
+                        </p>
+                        {% elif c.payment_method == "Self-Reported" %}
+                        <p style="font-size:0.7rem;margin-top:4px;color:{% if c.verification_status == 'Verified' %}#6ee7b7{% elif c.verification_status == 'Rejected' %}#fca5a5{% else %}#fdba74{% endif %};"
+                           title="{{ c.rejection_reason }}">
+                            {% if c.verification_status == "Verified" %}✓ Verified{% elif c.verification_status == "Rejected" %}✗ Rejected{% else %}⏳ Awaiting verification{% endif %}
                         </p>
                         {% endif %}
 
@@ -901,7 +911,7 @@
                                     {% if loan.status == "Pending" %}
                                     <span class="badge" style="background:rgba(251,191,36,0.15);color:#fdba74;">⏳ Pending</span>
                                     {% elif loan.status == "Rejected" %}
-                                    <span class="badge badge-red">Rejected</span>
+                                    <span class="badge badge-red" title="{{ loan.rejection_reason }}">Rejected{% if loan.rejection_reason %} ⓘ{% endif %}</span>
                                     {% elif loan.is_paid %}
                                     <span class="badge badge-green">Paid</span>
                                     {% else %}

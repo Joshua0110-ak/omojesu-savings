@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Payment Proof – OmoJesu Savings</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'core/images/site.webmanifest' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #C9A84C; --gold-lt: #E8C97A; --green: #1A6B4A; --green-lt: #22885E;
+            --dark: #0A0E0C; --card: #111812; --border2: rgba(255,255,255,0.07);
+            --text: #F0EDE6; --muted: #8A9490;
+        }
+        body {
+            min-height: 100vh; background-color: var(--dark);
+            background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26,107,74,0.35) 0%, transparent 65%);
+            font-family: 'DM Sans', sans-serif; color: var(--text);
+            display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem;
+        }
+        .card { background: var(--card); border: 1px solid var(--border2); border-radius: 22px; padding: 2rem; max-width: 440px; width: 100%; }
+        h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; margin-bottom: 0.35rem; }
+        .sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1.1rem; }
+        .form-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.4rem; display: block; }
+        input[type="number"], input[type="file"] {
+            width: 100%; border-radius: 14px; background: rgba(255,255,255,0.06); border: 1px solid var(--border2);
+            padding: 0.8rem 1rem; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+        }
+        .btn {
+            width: 100%; padding: 0.85rem; border-radius: 14px; border: none; cursor: pointer;
+            background: linear-gradient(135deg, var(--green-lt), var(--green)); color: #fff; font-weight: 600; font-size: 0.9rem;
+        }
+        .back-link { display: block; margin-top: 1rem; text-align: center; font-size: 0.8rem; color: var(--muted); text-decoration: none; }
+        .error-msg { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; padding: 0.7rem 1rem; border-radius: 10px; margin-bottom: 1rem; font-size: 0.82rem; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Submit Payment Proof</h1>
+        <p class="sub">Made a bank transfer for your contribution? Upload a screenshot here — a finance admin will verify it before it's added to your savings.</p>
+
+        {% if form.errors %}
+        <div class="error-msg">
+            {% for field in form %}{% for error in field.errors %}{{ error }}<br>{% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Amount Transferred (₦)</label>
+                {{ form.amount }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Screenshot of Transfer</label>
+                {{ form.proof_image }}
+            </div>
+            <button type="submit" class="btn" onclick="return confirm('Submit this payment proof for verification?');">Submit for Verification 📤</button>
+        </form>
+        <a href="{% url 'member_detail' member.id %}" class="back-link">← Back to my dashboard</a>
+    </div>
+</body>
+</html>

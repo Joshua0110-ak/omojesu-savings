@@ -42,6 +42,10 @@ class Member(models.Model):
     )
 
     is_finance_admin = models.BooleanField(default=False)
+    is_compulsory_approver = models.BooleanField(
+        default=False,
+        help_text="This finance admin must always give the FINAL approval on loans (never the first)."
+    )
 
     full_name    = models.CharField(max_length=150)
     email        = models.EmailField(max_length=254, blank=True, null=True)  # ← ADD THIS LINE
@@ -65,8 +69,15 @@ class Member(models.Model):
 class Contribution(models.Model):
 
     PAYMENT_METHODS = (
-        ("Manual",   "Manual"),
-        ("Paystack", "Paystack"),
+        ("Manual",        "Manual"),
+        ("Paystack",      "Paystack"),
+        ("Self-Reported", "Self-Reported"),
+    )
+
+    VERIFICATION_STATUS = (
+        ("Pending",  "Pending"),
+        ("Verified", "Verified"),
+        ("Rejected", "Rejected"),
     )
 
     member = models.ForeignKey(
@@ -88,6 +99,17 @@ class Contribution(models.Model):
     # FIX: added — prevents fake/unverified Paystack callbacks from being counted
     payment_verified = models.BooleanField(default=False)
 
+    # ── SELF-REPORTED PROOF-OF-PAYMENT ──
+    proof_image = models.ImageField(upload_to="contribution_proofs/", null=True, blank=True)
+    verification_status = models.CharField(
+        max_length=20, choices=VERIFICATION_STATUS, default="Verified"
+    )
+    verified_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="verified_contributions"
+    )
+    rejection_reason = models.TextField(blank=True)
+
     date        = models.DateTimeField(auto_now_add=True)
     recorded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
@@ -101,10 +123,11 @@ class Contribution(models.Model):
 class Loan(models.Model):
 
     STATUS_CHOICES = (
-        ("Pending",   "Pending"),
-        ("Approved",  "Approved"),
-        ("Rejected",  "Rejected"),
-        ("Completed", "Completed"),
+        ("Pending",             "Pending"),
+        ("Partially Approved",  "Partially Approved"),
+        ("Approved",            "Approved"),
+        ("Rejected",            "Rejected"),
+        ("Completed",           "Completed"),
     )
 
     member = models.ForeignKey(
@@ -129,10 +152,25 @@ class Loan(models.Model):
         related_name="recorded_loans"
     )
 
-    approved_by = models.ForeignKey(
+    # ── TWO-STAGE APPROVAL ──
+    approved_by_first = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="approved_loans"
+        related_name="first_approved_loans"
     )
+    first_approved_at = models.DateTimeField(null=True, blank=True)
+
+    approved_by_second = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="second_approved_loans"
+    )
+    second_approved_at = models.DateTimeField(null=True, blank=True)
+
+    # ── REJECTION ──
+    rejected_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="rejected_loans"
+    )
+    rejection_reason = models.TextField(blank=True)
 
     def total_with_interest(self):
         return self.amount + (self.amount * self.interest_rate / 100)

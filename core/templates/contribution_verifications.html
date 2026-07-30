@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Payments – OmoJesu Savings</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'core/images/site.webmanifest' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gold: #C9A84C; --gold-lt: #E8C97A; --green: #1A6B4A; --green-lt: #22885E;
+            --dark: #0A0E0C; --card: #111812; --border2: rgba(255,255,255,0.07);
+            --text: #F0EDE6; --muted: #8A9490; --red: #fca5a5;
+        }
+        body {
+            min-height: 100vh; background-color: var(--dark);
+            background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(26,107,74,0.35) 0%, transparent 65%);
+            font-family: 'DM Sans', sans-serif; color: var(--text); padding: 2rem 1.5rem 4rem;
+        }
+        .wrapper { max-width: 820px; margin: 0 auto; }
+        .back-link { color: var(--muted); text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { color: var(--text); }
+        h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.9rem; margin: 0.75rem 0 0.25rem; }
+        .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.75rem; }
+        .msg { padding: 0.85rem 1.1rem; border-radius: 12px; margin-bottom: 1rem; font-size: 0.85rem; }
+        .msg-success { background: rgba(34,136,94,0.15); border: 1px solid rgba(34,136,94,0.35); color: #6ee7b7; }
+        .msg-error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+        .proof-card {
+            background: var(--card); border: 1px solid var(--border2); border-radius: 18px;
+            padding: 1.25rem 1.5rem; margin-bottom: 1rem; display: flex; gap: 1.25rem; flex-wrap: wrap;
+        }
+        .proof-image {
+            width: 140px; height: 140px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border2); flex-shrink: 0;
+        }
+        .proof-info { flex: 1; min-width: 200px; }
+        .proof-member { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; }
+        .proof-meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+        .proof-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700; color: var(--gold-lt); margin: 0.5rem 0; }
+        .actions { display: flex; flex-direction: column; gap: 0.6rem; min-width: 220px; }
+        .btn { font-size: 0.8rem; font-weight: 500; padding: 0.55rem 1.1rem; border-radius: 10px; border: 1px solid var(--border2); cursor: pointer; }
+        .btn-approve { background: linear-gradient(135deg, var(--green-lt), var(--green)); border-color: transparent; color: #fff; }
+        .btn-reject { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: var(--red); }
+        textarea {
+            width: 100%; min-height: 50px; resize: vertical; font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border2); border-radius: 10px; padding: 0.5rem 0.6rem; color: var(--text);
+        }
+        .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Admin Dashboard</a>
+        <h1>Verify Payments</h1>
+        <p class="sub">Members self-report bank transfers with a screenshot. Verify or reject each one below.</p>
+
+        {% for message in messages %}
+        <div class="msg {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ message }}</div>
+        {% endfor %}
+
+        {% for c in pending_contributions %}
+        <div class="proof-card">
+            {% if c.proof_image %}
+            <a href="{{ c.proof_image.url }}" target="_blank"><img src="{{ c.proof_image.url }}" class="proof-image" alt="Payment proof"></a>
+            {% endif %}
+            <div class="proof-info">
+                <p class="proof-member">{{ c.member.full_name }}</p>
+                <p class="proof-meta">Card Number: {{ c.member.card_number }} · Submitted {{ c.date|date:"M d, Y · H:i" }}</p>
+                <p class="proof-amount">₦{{ c.amount|floatformat:2 }}</p>
+            </div>
+            <div class="actions">
+                <form method="POST" action="{% url 'approve_contribution' c.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-approve" style="width:100%;" onclick="return confirm('Verify this payment as genuine?');">Verify ✓</button>
+                </form>
+                <form method="POST" action="{% url 'reject_contribution' c.id %}">
+                    {% csrf_token %}
+                    <textarea name="reason" placeholder="Reason for rejecting (required)" required></textarea>
+                    <button type="submit" class="btn btn-reject" style="width:100%;margin-top:0.4rem;" onclick="return confirm('Reject this payment proof?');">Reject ✕</button>
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty">No payment proofs waiting for verification right now. 🎉</div>
+        {% endfor %}
+    </div>
+</body>
+</html>

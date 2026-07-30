@@ -31,10 +31,14 @@ from .services import (
     total_interest_all,      
     total_repayments_all,
     pending_approvals_count,
+    pending_contribution_verifications_count,
+    is_compulsory_approver,
+    get_compulsory_approver,
 )
 from .forms import (
     ContributionForm, LoanForm, LoanRepaymentForm,
     MemberForm, ProfileUpdateForm, MemberRegistrationForm,
+    ContributionProofForm,
 )
 from .decorators import finance_admin_required
 from .paystack_services import initialize_transaction, verify_transaction
@@ -191,6 +195,7 @@ def admin_dashboard(request):
         "chart_labels": json.dumps(stats["chart_labels"]),
         "chart_data": json.dumps(stats["chart_data"]),
         "pending_approvals_count": pending_approvals_count(),
+        "pending_contribution_verifications_count": pending_contribution_verifications_count(),
     })
 
 
@@ -310,6 +315,8 @@ def add_contribution(request):
             contribution.recorded_by = request.user
             contribution.payment_method = "Manual"
             contribution.payment_verified = True  # manual = always verified
+            contribution.verification_status = "Verified"
+            contribution.verified_by = request.user
             contribution.save()
             messages.success(request, f"Contribution of ₦{contribution.amount:,.2f} recorded.")
             return redirect("member_detail", member_id=contribution.member.id)
@@ -353,7 +360,7 @@ def add_loan(request):
             messages.success(
                 request,
                 f"📨 Loan request of ₦{loan.amount:,.2f} for {loan.member.full_name} "
-                "has been submitted and is awaiting approval from another finance admin."
+                "has been submitted and needs two approvals before it's granted."
             )
             return redirect("member_detail", member_id=loan.member.id)
     else:
@@ -368,49 +375,195 @@ def add_loan(request):
 @finance_admin_required
 def loan_approvals(request):
     """List all loans awaiting approval - finance admins only."""
-    pending_loans = Loan.objects.filter(status="Pending").select_related(
-        "member", "recorded_by"
+    pending_loans = Loan.objects.filter(
+        status__in=["Pending", "Partially Approved"]
+    ).select_related(
+        "member", "recorded_by", "approved_by_first", "approved_by_second"
     ).order_by("date_given")
+
     return render(request, "loan_approvals.html", {
         "pending_loans": pending_loans,
+        "viewer_is_compulsory_approver": is_compulsory_approver(request.user),
+        "compulsory_approver": get_compulsory_approver(),
     })
 
 
 @login_required
 @finance_admin_required
 def approve_loan(request, loan_id):
-    """Approve a pending loan - cannot approve your own request."""
-    loan = get_object_or_404(Loan, id=loan_id, status="Pending")
+    """
+    Two-stage approval:
+      Stage 1 (status=Pending): ANY finance admin except the requester AND
+        except the compulsory approver (she only does the final stage).
+      Stage 2 (status=Partially Approved): ONLY the compulsory approver.
+    """
+    loan = get_object_or_404(Loan, id=loan_id, status__in=["Pending", "Partially Approved"])
 
     if loan.recorded_by_id == request.user.id:
         messages.error(request, "You can't approve a loan you requested yourself. Ask another finance admin to review it.")
         return redirect("loan_approvals")
 
-    if request.method == "POST":
-        loan.status = "Approved"
-        loan.approved_by = request.user
+    if request.method != "POST":
+        return redirect("loan_approvals")
+
+    compulsory = get_compulsory_approver()
+    viewer_is_compulsory = is_compulsory_approver(request.user)
+
+    if loan.status == "Pending":
+        if viewer_is_compulsory:
+            messages.error(
+                request,
+                "The compulsory approver only gives the FINAL approval — "
+                "another finance admin needs to approve this first."
+            )
+            return redirect("loan_approvals")
+
+        loan.approved_by_first = request.user
+        loan.first_approved_at = timezone.now()
+        loan.status = "Partially Approved"
         loan.save()
-        messages.success(request, f"✅ Loan of ₦{loan.amount:,.2f} for {loan.member.full_name} approved.")
+
+        if compulsory:
+            messages.success(
+                request,
+                f"✅ First approval recorded for ₦{loan.amount:,.2f} to {loan.member.full_name}. "
+                f"Waiting for {compulsory.full_name} to give the final approval."
+            )
+        else:
+            messages.warning(
+                request,
+                f"✅ First approval recorded, but no one is currently set as the "
+                "compulsory final approver — set that in the admin panel (Members) "
+                "so this loan can be finished."
+            )
+
+    elif loan.status == "Partially Approved":
+        if not viewer_is_compulsory:
+            name = compulsory.full_name if compulsory else "the designated approver"
+            messages.error(request, f"Only {name} can give the final approval on this loan.")
+            return redirect("loan_approvals")
+
+        loan.approved_by_second = request.user
+        loan.second_approved_at = timezone.now()
+        loan.status = "Approved"
+        loan.save()
+        messages.success(
+            request,
+            f"🎉 Loan of ₦{loan.amount:,.2f} for {loan.member.full_name} is FULLY APPROVED!"
+        )
+
     return redirect("loan_approvals")
 
 
 @login_required
 @finance_admin_required
 def reject_loan(request, loan_id):
-    """Reject a pending loan - cannot reject your own request."""
-    loan = get_object_or_404(Loan, id=loan_id, status="Pending")
+    """Reject a pending/partially-approved loan - requires a reason. Cannot reject your own request."""
+    loan = get_object_or_404(Loan, id=loan_id, status__in=["Pending", "Partially Approved"])
 
     if loan.recorded_by_id == request.user.id:
         messages.error(request, "You can't reject a loan you requested yourself. Ask another finance admin to review it.")
         return redirect("loan_approvals")
 
     if request.method == "POST":
+        reason = request.POST.get("reason", "").strip()
+        if not reason:
+            messages.error(request, "Please provide a reason for rejecting this loan.")
+            return redirect("loan_approvals")
+
         loan.status = "Rejected"
-        loan.approved_by = request.user
+        loan.rejected_by = request.user
+        loan.rejection_reason = reason
         loan.is_paid = True  # so it never shows as "outstanding" or blocks new requests
         loan.save()
         messages.success(request, f"🚫 Loan of ₦{loan.amount:,.2f} for {loan.member.full_name} rejected.")
     return redirect("loan_approvals")
+
+
+# ── SELF-REPORTED CONTRIBUTION PROOF (bank transfer screenshot) ──────────────
+
+@login_required
+def submit_contribution_proof(request, member_id):
+    """Member self-reports a bank transfer with a screenshot as proof.
+    Goes to Pending status until a finance admin verifies it."""
+    member = get_object_or_404(Member, id=member_id)
+
+    if not is_finance_admin(request.user):
+        try:
+            if request.user.member != member:
+                return HttpResponseForbidden("You can only submit proof for yourself.")
+        except Member.DoesNotExist:
+            return HttpResponseForbidden("You can only submit proof for yourself.")
+
+    if request.method == "POST":
+        form = ContributionProofForm(request.POST, request.FILES)
+        if form.is_valid():
+            contribution = form.save(commit=False)
+            contribution.member = member
+            contribution.payment_method = "Self-Reported"
+            contribution.payment_verified = False
+            contribution.verification_status = "Pending"
+            contribution.save()
+            messages.success(
+                request,
+                f"📤 Your payment proof for ₦{contribution.amount:,.2f} has been submitted "
+                "and will count towards your savings once a finance admin verifies it."
+            )
+            return redirect("member_detail", member_id=member.id)
+    else:
+        form = ContributionProofForm()
+
+    return render(request, "submit_contribution_proof.html", {"form": form, "member": member})
+
+
+@login_required
+@finance_admin_required
+def contribution_verifications(request):
+    """List self-reported contributions awaiting verification - finance admins only."""
+    pending = Contribution.objects.filter(
+        verification_status="Pending"
+    ).select_related("member").order_by("date")
+    return render(request, "contribution_verifications.html", {"pending_contributions": pending})
+
+
+@login_required
+@finance_admin_required
+def approve_contribution(request, contribution_id):
+    """Verify a self-reported contribution - it now counts toward savings."""
+    contribution = get_object_or_404(Contribution, id=contribution_id, verification_status="Pending")
+    if request.method == "POST":
+        contribution.verification_status = "Verified"
+        contribution.payment_verified = True
+        contribution.verified_by = request.user
+        contribution.save()
+        messages.success(
+            request,
+            f"✅ Verified ₦{contribution.amount:,.2f} contribution from {contribution.member.full_name}."
+        )
+    return redirect("contribution_verifications")
+
+
+@login_required
+@finance_admin_required
+def reject_contribution(request, contribution_id):
+    """Reject a self-reported contribution - requires a reason. Never counts toward savings."""
+    contribution = get_object_or_404(Contribution, id=contribution_id, verification_status="Pending")
+    if request.method == "POST":
+        reason = request.POST.get("reason", "").strip()
+        if not reason:
+            messages.error(request, "Please provide a reason for rejecting this proof.")
+            return redirect("contribution_verifications")
+
+        contribution.verification_status = "Rejected"
+        contribution.payment_verified = False
+        contribution.verified_by = request.user
+        contribution.rejection_reason = reason
+        contribution.save()
+        messages.success(
+            request,
+            f"🚫 Rejected ₦{contribution.amount:,.2f} proof from {contribution.member.full_name}."
+        )
+    return redirect("contribution_verifications")
 
 
 # ── ADD REPAYMENT ─────────────────────────────────────────────────────────────

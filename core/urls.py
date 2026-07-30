@@ -16,6 +16,10 @@ from .views import (
     loan_approvals,
     approve_loan,
     reject_loan,
+    submit_contribution_proof,
+    contribution_verifications,
+    approve_contribution,
+    reject_contribution,
     add_member,
     password_change_done_redirect,
     member_full_statement,
@@ -55,6 +59,10 @@ urlpatterns = [
     path("loan-approvals/<int:loan_id>/approve/", approve_loan, name="approve_loan"),
     path("loan-approvals/<int:loan_id>/reject/",  reject_loan,  name="reject_loan"),
     path("add-repayment/",    add_repayment,    name="add_repayment"),
+    path("member/<int:member_id>/submit-proof/", submit_contribution_proof, name="submit_contribution_proof"),
+    path("contribution-verifications/", contribution_verifications, name="contribution_verifications"),
+    path("contribution-verifications/<int:contribution_id>/approve/", approve_contribution, name="approve_contribution"),
+    path("contribution-verifications/<int:contribution_id>/reject/",  reject_contribution,  name="reject_contribution"),
     path("add-member/",       add_member,       name="add_member"),
 
     # ── PAYSTACK ──────────────────────────────────────────────────────────────

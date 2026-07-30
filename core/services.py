@@ -186,8 +186,8 @@ def total_repayments_all():
     return result or Decimal('0')
 
 def has_pending_loan(member):
-    """Check if a member has any unresolved loan (Pending or Approved-and-unpaid).
-    A Rejected loan doesn't count — it shouldn't block a fresh request."""
+    """Check if a member has any unresolved loan (Pending, Partially Approved,
+    or Approved-and-unpaid). A Rejected loan doesn't count."""
     return Loan.objects.filter(member=member, is_paid=False).exclude(status="Rejected").exists()
 
 
@@ -197,5 +197,25 @@ def get_pending_loans(member):
 
 
 def pending_approvals_count():
-    """Number of loans awaiting a decision — used for the admin nav badge."""
-    return Loan.objects.filter(status="Pending").count()    
+    """Number of loans awaiting ANY decision — used for the admin nav badge."""
+    return Loan.objects.filter(status__in=["Pending", "Partially Approved"]).count()
+
+
+def pending_contribution_verifications_count():
+    """Number of self-reported contributions awaiting admin verification."""
+    return Contribution.objects.filter(verification_status="Pending").count()
+
+
+def is_compulsory_approver(user):
+    """Check if this user is the member flagged as the compulsory final approver."""
+    if not user.is_authenticated:
+        return False
+    try:
+        return user.member.is_compulsory_approver
+    except (Member.DoesNotExist, AttributeError):
+        return False
+
+
+def get_compulsory_approver():
+    """Get the Member currently flagged as the compulsory final approver, if any."""
+    return Member.objects.filter(is_compulsory_approver=True).first()    

@@ -7,6 +7,34 @@ _INPUT  = "w-full rounded-2xl bg-white/10 border border-white/20 p-4 text-white 
 _SELECT = _INPUT
 
 
+class ContributionProofForm(forms.ModelForm):
+    """Member self-reports a bank transfer with a screenshot as proof.
+    Goes to Pending until a finance admin verifies it."""
+
+    class Meta:
+        model  = Contribution
+        fields = ["amount", "proof_image"]
+        widgets = {
+            "amount": forms.NumberInput(attrs={
+                "class": _INPUT, "placeholder": "Amount you transferred (₦)",
+                "min": "0.01", "step": "0.01"
+            }),
+            "proof_image": forms.ClearableFileInput(attrs={"class": _INPUT, "accept": "image/*"}),
+        }
+
+    def clean_amount(self):
+        v = self.cleaned_data["amount"]
+        if v <= 0:
+            raise ValidationError("Amount must be greater than zero.")
+        return v
+
+    def clean_proof_image(self):
+        img = self.cleaned_data.get("proof_image")
+        if not img:
+            raise ValidationError("Please upload a screenshot of your bank transfer as proof.")
+        return img
+
+
 # ── CONTRIBUTION ──────────────────────────────────────────────────────────────
 
 class ContributionForm(forms.ModelForm):

@@ -49,16 +49,32 @@
             border: 1px solid var(--border2); cursor: pointer; text-decoration: none;
         }
         .btn-approve { background: linear-gradient(135deg, var(--green-lt), var(--green)); border-color: transparent; color: #fff; }
+        .btn-final { background: linear-gradient(135deg, #8B5CF6, #6D28D9); border-color: transparent; color: #fff; }
         .btn-reject { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: var(--red); }
         .self-note { font-size: 0.78rem; color: var(--muted); font-style: italic; }
         .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 0.9rem; }
+        .progress { font-size: 0.78rem; color: var(--gold-lt); margin-top: 0.4rem; }
+        .reject-box { display: flex; flex-direction: column; gap: 0.4rem; min-width: 220px; }
+        .reject-box textarea {
+            width: 100%; min-height: 50px; resize: vertical; font-family: 'DM Sans', sans-serif;
+            font-size: 0.78rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border2);
+            border-radius: 10px; padding: 0.5rem 0.6rem; color: var(--text);
+        }
+        .rejection-note {
+            font-size: 0.78rem; color: var(--red); background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 0.6rem 0.8rem; margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Admin Dashboard</a>
         <h1>Loan Approvals</h1>
-        <p class="sub">Every new loan request needs a different finance admin to approve or reject it.</p>
+        <p class="sub">
+            Every loan needs TWO approvals: any finance admin first, then
+            {% if compulsory_approver %}<strong>{{ compulsory_approver.full_name }}</strong>{% else %}the designated approver{% endif %}
+            must give the final approval.
+        </p>
 
         {% for message in messages %}
         <div class="msg {% if message.tags == 'error' %}msg-error{% else %}msg-success{% endif %}">{{ message }}</div>
@@ -73,18 +89,40 @@
                     · Due: {{ loan.due_date|date:"M d, Y" }}<br>
                     Requested by {{ loan.recorded_by.username|default:"—" }} on {{ loan.date_given|date:"M d, Y · H:i" }}
                 </p>
+                <p class="progress">
+                    {% if loan.status == "Pending" %}
+                        ⏳ 0/2 approvals — waiting for a first approval
+                    {% elif loan.status == "Partially Approved" %}
+                        ✅ 1/2 approvals — first approved by {{ loan.approved_by_first.username }}
+                        on {{ loan.first_approved_at|date:"M d, Y · H:i" }}, waiting for the final approval
+                    {% endif %}
+                </p>
             </div>
             <div class="loan-amount">₦{{ loan.amount|floatformat:2 }}</div>
+
             {% if loan.recorded_by_id == request.user.id %}
-                <p class="self-note">You requested this — another admin must review it.</p>
+                <p class="self-note">You requested this — wait for approvals.</p>
             {% else %}
             <div class="actions">
+                {% if loan.status == "Pending" and not viewer_is_compulsory_approver %}
                 <form method="POST" action="{% url 'approve_loan' loan.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-approve" onclick="return confirm('Approve this loan?');">Approve ✓</button>
+                    <button type="submit" class="btn btn-approve" onclick="return confirm('Give first approval on this loan?');">Approve (1/2)</button>
                 </form>
-                <form method="POST" action="{% url 'reject_loan' loan.id %}">
+                {% elif loan.status == "Pending" and viewer_is_compulsory_approver %}
+                <p class="self-note">You only give the final approval — someone else must approve first.</p>
+                {% elif loan.status == "Partially Approved" and viewer_is_compulsory_approver %}
+                <form method="POST" action="{% url 'approve_loan' loan.id %}">
                     {% csrf_token %}
+                    <button type="submit" class="btn btn-final" onclick="return confirm('Give the FINAL approval on this loan?');">Final Approve (2/2)</button>
+                </form>
+                {% elif loan.status == "Partially Approved" and not viewer_is_compulsory_approver %}
+                <p class="self-note">Waiting on the final approver.</p>
+                {% endif %}
+
+                <form method="POST" action="{% url 'reject_loan' loan.id %}" class="reject-box">
+                    {% csrf_token %}
+                    <textarea name="reason" placeholder="Reason for rejecting (required)" required></textarea>
                     <button type="submit" class="btn btn-reject" onclick="return confirm('Reject this loan?');">Reject ✕</button>
                 </form>
             </div>

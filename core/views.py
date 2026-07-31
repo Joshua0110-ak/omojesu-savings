@@ -790,8 +790,25 @@ def statement_pdf(request, member_id):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{member.full_name}_statement.pdf"'
     response.write(pdf)
-    return response
+    return response   
 
+
+# ── REJECTED LOANS HISTORY ────────────────────────────────────────────────────
+
+@login_required
+@finance_admin_required
+def rejected_loans(request):
+    """View all rejected loans with reasons."""
+    rejected_loans = Loan.objects.filter(
+        status="Rejected"
+    ).select_related(
+        "member", "recorded_by", "approved_by"
+    ).order_by("-date_given")
+    
+    return render(request, "rejected_loans.html", {
+        "rejected_loans": rejected_loans,
+    })
+            
 # ── FULL STATEMENT (Bank-Style) ──────────────────────────────────────────────
 
 @login_required

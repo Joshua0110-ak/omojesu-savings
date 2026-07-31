@@ -369,6 +369,9 @@
             {% endif %}
             <a href="{% url 'loan_approvals' %}" class="btn" style="{% if pending_approvals_count > 0 %}background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.35);color:#fca5a5;{% endif %}">🔔 Pending Approvals{% if pending_approvals_count > 0 %} ({{ pending_approvals_count }}){% endif %}</a>
             <a href="{% url 'contribution_verifications' %}" class="btn" style="{% if pending_contribution_verifications_count > 0 %}background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.35);color:#fdba74;{% endif %}">📸 Verify Payments{% if pending_contribution_verifications_count > 0 %} ({{ pending_contribution_verifications_count }}){% endif %}</a>
+            <a href="{% url 'rejected_loans' %}" class="btn" style="border-color:rgba(239,68,68,0.3);color:#fca5a5;">
+    🚫 Rejected Loans
+</a>
             <a href="{% url 'member_search' %}" class="btn">Members</a>
             <a href="{% url 'add_member' %}" class="btn btn-green">+ Add Member</a>
             <a href="{% url 'add_contribution' %}" class="btn btn-gold">+ Contribution</a>

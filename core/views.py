@@ -802,7 +802,7 @@ def rejected_loans(request):
     rejected_loans = Loan.objects.filter(
         status="Rejected"
     ).select_related(
-        "member", "recorded_by", "approved_by"
+        "member", "recorded_by", "rejected_by"
     ).order_by("-date_given")
     
     return render(request, "rejected_loans.html", {

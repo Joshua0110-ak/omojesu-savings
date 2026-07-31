@@ -440,6 +440,22 @@ def add_loan(request):
     
     return render(request, "give_loan.html", {"form": form})
 
+# ── REJECTED LOANS HISTORY ────────────────────────────────────────────────────
+
+@login_required
+@finance_admin_required
+def rejected_loans(request):
+    """View all rejected loans with reasons."""
+    rejected_loans = Loan.objects.filter(
+        status="Rejected"
+    ).select_related(
+        "member", "recorded_by", "approved_by_first", "approved_by_second"
+    ).order_by("-date_given")
+    
+    return render(request, "rejected_loans.html", {
+        "rejected_loans": rejected_loans,
+    })
+
 
 # ── LOAN APPROVALS ────────────────────────────────────────────────────────────
 

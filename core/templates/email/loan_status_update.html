@@ -1,0 +1,16 @@
+{% extends "email/_base_email.html" %}
+{% block content %}
+{% if approved %}
+<p class="title">🎉 Loan Approved</p>
+<p class="body-text">Hi {{ member.full_name }},</p>
+<p class="body-text">Your loan request has been fully approved:</p>
+<p class="amount">₦{{ amount|floatformat:2 }}</p>
+<p class="body-text">Interest: {{ interest_rate }}% · Due: {{ due_date|date:"M d, Y" }}</p>
+{% else %}
+<p class="title">🚫 Loan Rejected</p>
+<p class="body-text">Hi {{ member.full_name }},</p>
+<p class="body-text">Your loan request of ₦{{ amount|floatformat:2 }} was not approved.</p>
+<div class="reason-box">Reason: {{ reason }}</div>
+{% endif %}
+<a href="{{ member_url }}" class="btn">View My Dashboard →</a>
+{% endblock %}

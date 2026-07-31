@@ -212,6 +212,7 @@
     <!-- ACTIONS -->
     <div class="no-print" style="margin-bottom:1.5rem;">
         <button onclick="window.print()" class="btn btn-print">🖨️ Print All</button>
+        <a href="{% url 'export_members_csv' %}" class="btn btn-print" style="background:var(--green,#1A6B4A);color:#fff;">📊 Export CSV</a>
         <a href="{% url 'admin_dashboard' %}" class="btn btn-back">← Back to Dashboard</a>
     </div>
 

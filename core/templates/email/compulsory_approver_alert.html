@@ -1,0 +1,12 @@
+{% extends "email/_base_email.html" %}
+{% block content %}
+<p class="title">✅ Final Approval Needed</p>
+<p class="body-text">Hi {{ approver.full_name }},</p>
+<p class="body-text">
+    A loan request for <strong>{{ member_name }}</strong> has received its first approval
+    and is now waiting on your final sign-off.
+</p>
+<p class="amount">₦{{ amount|floatformat:2 }}</p>
+<p class="body-text">First approved by: {{ first_approver }}</p>
+<a href="{{ approvals_url }}" class="btn">Review & Approve →</a>
+{% endblock %}

@@ -6,6 +6,8 @@ from .views import (
     login_view,
     logout_view,
     register_view,
+    forgot_password_view,
+    reset_password_confirm_view,
     admin_dashboard,
     member_detail,
     member_search,
@@ -29,6 +31,7 @@ from .views import (
     receipt,
     paystack_webhook,
     all_members_statement,
+    export_members_csv,
     weekly_contributions,  
 )
 
@@ -38,6 +41,8 @@ urlpatterns = [
     path("",          login_view,    name="login"),
     path("logout/",   logout_view,   name="logout"),
     path("register/", register_view, name="register"),
+    path("forgot-password/", forgot_password_view, name="forgot_password"),
+    path("reset-password/<str:uidb64>/<str:token>/", reset_password_confirm_view, name="reset_password_confirm"),
 
     # ── DASHBOARDS ────────────────────────────────────────────────────────────
     path("dashboard/",                   admin_dashboard, name="admin_dashboard"),
@@ -49,6 +54,7 @@ urlpatterns = [
     path("member/<int:member_id>/statement/", statement_pdf, name="statement_pdf"),
     path("member/<int:member_id>/full-statement/", member_full_statement, name="member_full_statement"),
     path("all-members-statement/", all_members_statement, name="all_members_statement"),
+    path("export-members-csv/", export_members_csv, name="export_members_csv"),
 
     # ── WEEKLY CONTRIBUTIONS ──────────────────────────────────────────────────
     path("weekly-contributions/", weekly_contributions, name="weekly_contributions"),  

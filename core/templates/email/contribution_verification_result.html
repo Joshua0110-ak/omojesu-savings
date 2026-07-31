@@ -1,0 +1,16 @@
+{% extends "email/_base_email.html" %}
+{% block content %}
+{% if verified %}
+<p class="title">✅ Payment Verified</p>
+<p class="body-text">Hi {{ member.full_name }},</p>
+<p class="body-text">Your bank transfer proof has been verified and added to your savings:</p>
+<p class="amount">₦{{ amount|floatformat:2 }}</p>
+{% else %}
+<p class="title">🚫 Payment Proof Rejected</p>
+<p class="body-text">Hi {{ member.full_name }},</p>
+<p class="body-text">Your submitted payment proof of ₦{{ amount|floatformat:2 }} could not be verified.</p>
+<div class="reason-box">Reason: {{ reason }}</div>
+<p class="body-text" style="margin-top:14px;">If you believe this is a mistake, please contact a finance admin.</p>
+{% endif %}
+<a href="{{ member_url }}" class="btn">View My Dashboard →</a>
+{% endblock %}

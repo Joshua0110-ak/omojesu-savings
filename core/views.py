@@ -38,10 +38,14 @@ from .services import (
 from .forms import (
     ContributionForm, LoanForm, LoanRepaymentForm,
     MemberForm, ProfileUpdateForm, MemberRegistrationForm,
-    ContributionProofForm,
+    ContributionProofForm, ForgotPasswordForm, SetNewPasswordForm,
 )
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 from .decorators import finance_admin_required
 from .paystack_services import initialize_transaction, verify_transaction
+from . import notifications
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +180,74 @@ def register_view(request):
         form = MemberRegistrationForm()
     
     return render(request, "register.html", {"form": form, "error": error})
+
+
+# ── FORGOT PASSWORD ───────────────────────────────────────────────────────────
+
+def forgot_password_view(request):
+    """Step 1: verify identity (username + card number), then email a reset link."""
+    error = None
+    sent = False
+
+    if request.method == "POST":
+        form = ForgotPasswordForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data["username"].strip()
+            card_number = form.cleaned_data["card_number"].strip()
+
+            try:
+                user = User.objects.get(username=username)
+                member = user.member
+                if member.card_number != card_number:
+                    raise Member.DoesNotExist
+            except (User.DoesNotExist, Member.DoesNotExist, AttributeError):
+                error = "We couldn't match that username with that card number. Please check and try again."
+                return render(request, "forgot_password.html", {"form": form, "error": error})
+
+            if not member.email:
+                error = "There's no email address on your profile. Contact a finance admin to reset your password."
+                return render(request, "forgot_password.html", {"form": form, "error": error})
+
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = request.build_absolute_uri(f"/reset-password/{uid}/{token}/")
+
+            try:
+                notifications.send_password_reset_email(member, reset_url)
+                sent = True
+            except Exception as e:
+                logger.error(f"Password reset email error: {e}")
+                error = "Something went wrong sending the email. Please try again shortly."
+    else:
+        form = ForgotPasswordForm()
+
+    return render(request, "forgot_password.html", {"form": form, "error": error, "sent": sent})
+
+
+def reset_password_confirm_view(request, uidb64, token):
+    """Step 2: the link from the email — set a new password if the token is valid."""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    token_valid = user is not None and default_token_generator.check_token(user, token)
+
+    if not token_valid:
+        return render(request, "reset_password_confirm.html", {"invalid": True})
+
+    if request.method == "POST":
+        form = SetNewPasswordForm(request.POST)
+        if form.is_valid():
+            user.set_password(form.cleaned_data["password"])
+            user.save()
+            messages.success(request, "Your password has been reset. You can now log in.")
+            return redirect("login")
+    else:
+        form = SetNewPasswordForm()
+
+    return render(request, "reset_password_confirm.html", {"form": form, "invalid": False})
 
 
 # ── ADMIN DASHBOARD ───────────────────────────────────────────────────────────
@@ -429,6 +501,10 @@ def approve_loan(request, loan_id):
                 f"✅ First approval recorded for ₦{loan.amount:,.2f} to {loan.member.full_name}. "
                 f"Waiting for {compulsory.full_name} to give the final approval."
             )
+            try:
+                notifications.notify_compulsory_approver(loan, compulsory)
+            except Exception as e:
+                logger.error(f"Compulsory approver email error: {e}")
         else:
             messages.warning(
                 request,
@@ -451,6 +527,10 @@ def approve_loan(request, loan_id):
             request,
             f"🎉 Loan of ₦{loan.amount:,.2f} for {loan.member.full_name} is FULLY APPROVED!"
         )
+        try:
+            notifications.notify_loan_approved(loan)
+        except Exception as e:
+            logger.error(f"Loan approval email error: {e}")
 
     return redirect("loan_approvals")
 
@@ -477,6 +557,10 @@ def reject_loan(request, loan_id):
         loan.is_paid = True  # so it never shows as "outstanding" or blocks new requests
         loan.save()
         messages.success(request, f"🚫 Loan of ₦{loan.amount:,.2f} for {loan.member.full_name} rejected.")
+        try:
+            notifications.notify_loan_rejected(loan)
+        except Exception as e:
+            logger.error(f"Loan rejection email error: {e}")
     return redirect("loan_approvals")
 
 
@@ -540,6 +624,10 @@ def approve_contribution(request, contribution_id):
             request,
             f"✅ Verified ₦{contribution.amount:,.2f} contribution from {contribution.member.full_name}."
         )
+        try:
+            notifications.notify_contribution_verified(contribution)
+        except Exception as e:
+            logger.error(f"Contribution verification email error: {e}")
     return redirect("contribution_verifications")
 
 
@@ -563,6 +651,10 @@ def reject_contribution(request, contribution_id):
             request,
             f"🚫 Rejected ₦{contribution.amount:,.2f} proof from {contribution.member.full_name}."
         )
+        try:
+            notifications.notify_contribution_rejected(contribution)
+        except Exception as e:
+            logger.error(f"Contribution rejection email error: {e}")
     return redirect("contribution_verifications")
 
 
@@ -790,25 +882,8 @@ def statement_pdf(request, member_id):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{member.full_name}_statement.pdf"'
     response.write(pdf)
-    return response   
+    return response
 
-
-# ── REJECTED LOANS HISTORY ────────────────────────────────────────────────────
-
-@login_required
-@finance_admin_required
-def rejected_loans(request):
-    """View all rejected loans with reasons."""
-    rejected_loans = Loan.objects.filter(
-        status="Rejected"
-    ).select_related(
-        "member", "recorded_by", "rejected_by"
-    ).order_by("-date_given")
-    
-    return render(request, "rejected_loans.html", {
-        "rejected_loans": rejected_loans,
-    })
-            
 # ── FULL STATEMENT (Bank-Style) ──────────────────────────────────────────────
 
 @login_required
@@ -1058,7 +1133,43 @@ def all_members_statement(request):
         'print_date': timezone.now(),
     }
     
-    return render(request, "all_members_statement.html", context)    
+    return render(request, "all_members_statement.html", context)
+
+
+@login_required
+@finance_admin_required
+def export_members_csv(request):
+    """Export all members' financial summary as a CSV file (opens directly in Excel)."""
+    import csv
+    from datetime import date as date_cls
+
+    response = HttpResponse(content_type="text/csv")
+    filename = f"omojesu_members_{date_cls.today().isoformat()}.csv"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        "Full Name", "Card Number", "Email", "Phone",
+        "Total Savings (₦)", "Total Loans (₦)", "Total Repayments (₦)",
+        "Outstanding Loan (₦)", "Loan Interest (₦)", "Available Balance (₦)",
+    ])
+
+    for member in Member.objects.all().order_by("full_name"):
+        summary = member_summary(member)
+        writer.writerow([
+            member.full_name,
+            member.card_number,
+            member.email or "",
+            member.phone or "",
+            f"{summary['total_savings']:.2f}",
+            f"{summary['total_loans']:.2f}",
+            f"{summary['total_repayments']:.2f}",
+            f"{summary['outstanding_loan']:.2f}",
+            f"{summary['loan_interest']:.2f}",
+            f"{summary['available_balance']:.2f}",
+        ])
+
+    return response    
 
 
 # ── PAYSTACK: VERIFY PAYMENT ──────────────────────────────────────────────────
@@ -1105,7 +1216,7 @@ def verify_payment(request, member_id):
 
                 # Send confirmation email to member
                 try:
-                    send_member_confirmation_paystack(member, contribution)
+                    notifications.notify_paystack_payment(member, contribution)
                 except Exception as e:
                     logger.error(f"Email error: {e}")
 
@@ -1175,7 +1286,7 @@ def paystack_webhook(request):
             with transaction.atomic():
                 member = Member.objects.select_for_update().get(id=member_id)
                 
-                Contribution.objects.create(
+                contribution = Contribution.objects.create(
                     member=member,
                     amount=amount,
                     payment_method="Paystack",
@@ -1187,6 +1298,11 @@ def paystack_webhook(request):
                 PaymentTransaction.objects.filter(reference=reference).update(
                     status="success", verified=True
                 )
+
+                try:
+                    notifications.notify_paystack_payment(member, contribution)
+                except Exception as e:
+                    logger.error(f"Webhook email error: {e}")
                 
                 logger.info(f"Webhook: Transaction {reference} processed successfully")
                 
@@ -1198,40 +1314,6 @@ def paystack_webhook(request):
     return HttpResponse(status=200)
 
 
-# ── HELPER: Send Paystack Confirmation Email ─────────────────────────────────
-
-def send_member_confirmation_paystack(member, contribution):
-    """Send confirmation email for Paystack payment."""
-    if not member.email:
-        return
-    
-    subject = f"✅ Payment Confirmed - OmoJesu Savings"
-    base_url = getattr(settings, 'BASE_URL', 'https://omojesu-savings.com')
-    member_url = f"{base_url}/member/{member.id}/"
-    
-    html_message = render_to_string('email/payment_confirmed_paystack.html', {
-        'member': member,
-        'amount': contribution.amount,
-        'transaction_ref': contribution.payment_reference,
-        'date': contribution.date,
-        'member_url': member_url,
-    })
-    
-    plain_message = strip_tags(html_message)
-    
-    try:
-        send_mail(
-            subject,
-            plain_message,
-            settings.DEFAULT_FROM_EMAIL,
-            [member.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
-    except Exception as e:
-        logger.error(f"Email error: {e}")
-        
-        
 # ── WEEKLY CONTRIBUTIONS REVIEW (Admin) ─────────────────────────────────────
 
 @login_required
@@ -1320,4 +1402,4 @@ def weekly_contributions(request):
         'contributions': contributions,
     }
     
-    return render(request, "weekly_contributions.html", context)        
+    return render(request, "weekly_contributions.html", context)

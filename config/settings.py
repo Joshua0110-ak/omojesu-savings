@@ -26,6 +26,10 @@ CSRF_TRUSTED_ORIGINS = ['https://*.up.railway.app']
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
+# ── AUTO-LOGOUT AFTER 5 MINUTES OF INACTIVITY ────────────────────────────────
+SESSION_COOKIE_AGE = 300          # 5 minutes, in seconds
+SESSION_SAVE_EVERY_REQUEST = True # resets the 5-minute countdown on every click/request
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True

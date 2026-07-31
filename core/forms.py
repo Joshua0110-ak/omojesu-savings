@@ -250,6 +250,36 @@ class ProfileUpdateForm(forms.ModelForm):
         return v
 
 
+class ForgotPasswordForm(forms.Form):
+    """Identity check before sending a reset link: username + card number
+    (not email lookup, since not every User has an email set)."""
+    username = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(attrs={"class": _INPUT, "placeholder": "Your username", "autocomplete": "username"})
+    )
+    card_number = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={"class": _INPUT, "placeholder": "Your card number", "autocomplete": "off"})
+    )
+
+
+class SetNewPasswordForm(forms.Form):
+    password = forms.CharField(
+        min_length=8,
+        widget=forms.PasswordInput(attrs={"class": _INPUT, "placeholder": "New password (min. 8 characters)"})
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": _INPUT, "placeholder": "Confirm new password"})
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        p1 = cleaned.get("password")
+        p2 = cleaned.get("confirm_password")
+        if p1 and p2 and p1 != p2:
+            raise ValidationError("Passwords do not match.")
+        return cleaned
+
 # ── MEMBER REGISTRATION ───────────────────────────────────────────────────────
 
 class MemberRegistrationForm(forms.Form):

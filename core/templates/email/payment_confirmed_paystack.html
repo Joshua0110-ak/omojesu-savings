@@ -1,0 +1,12 @@
+{% extends "email/_base_email.html" %}
+{% block content %}
+<p class="title">✅ Payment Received</p>
+<p class="body-text">Hi {{ member.full_name }},</p>
+<p class="body-text">We've received and recorded your contribution:</p>
+<p class="amount">₦{{ amount|floatformat:2 }}</p>
+<p class="body-text">
+    Reference: {{ transaction_ref }}<br>
+    Date: {{ date|date:"M d, Y \a\t H:i" }}
+</p>
+<a href="{{ member_url }}" class="btn">View My Dashboard →</a>
+{% endblock %}
